@@ -1,0 +1,4 @@
+{
+    "files.maxMemoryForLargeFilesMB": 8192,
+    "C_Cpp.intelliSenseMemoryLimit": 8192
+}

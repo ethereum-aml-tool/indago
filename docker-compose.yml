@@ -1,0 +1,80 @@
+version: "3.9"
+   
+services:
+  #PSQL
+  db:
+    image: postgres
+    container_name: psql-db
+    volumes:
+      - /media/ponbac/DB/sql/data:/var/lib/postgresql/data
+      - /media/ponbac/BigHDD/ethereum:/data
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - 5432:5432
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: psql-admin
+    volumes:
+      - /media/ponbac/DB/sql/pgadmin:/var/lib/pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@ponbac.xyz
+      PGADMIN_DEFAULT_PASSWORD: pass
+      PGADMIN_LISTEN_PORT: "1433"
+    user: root
+    ports:
+      - 1433:1433
+  # MONGODB
+  # mongoimport --jsonArray --db indago --collection dar --authenticationDatabase admin --username root --password example --drop --file /data/indago/results/user_clusters.json
+  mongo:
+    image: mongo
+    container_name: mongo-db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - 27017:27017
+    volumes:
+      - /media/ponbac/BigHDD/ethereum/mongo/data:/data/db
+      - /media/ponbac/BigHDD/ethereum/mongo/config:/data/configdb
+      - /media/ponbac/BigHDD/ethereum/results:/data/indago
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/
+  # FastAPI
+  web:
+    build: .
+    container_name: indago-api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 1444 --reload # TODO remove --reload for production use
+    restart: always
+    volumes:
+      - .:/code
+      - /data:/data
+      #- /media/ponbac/BigHDD/ethereum:/data
+    ports:
+      - "1444:1444"
+    environment:
+      - DB_HOST=DOCKER # =AWS for hosted DB (ALSO CHANGE POSTGRES_PASSWORD), =DOCKER for local DB
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - ETHERSCAN_API_KEY=
+      - GOOGLE_APPLICATION_CREDENTIALS=/code/google-auth.json
+    depends_on:
+      - db
+      - mongo
