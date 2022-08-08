@@ -59,7 +59,6 @@ def read_account(address: str, db: Session = Depends(get_db)):
             db, account=schemas.AccountCreate(address=address.lower()))
         # raise HTTPException(status_code=404, detail=f'Account for [{address}] not found')
 
-    time.sleep(3)  # TODO REMOVE, FOR DEMO ONLY!
     return db_account
 
 
