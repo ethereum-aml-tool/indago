@@ -16,14 +16,6 @@ from db.sql.database import SessionLocal, engine
 # PSQL
 models.Base.metadata.create_all(bind=engine)
 
-# TODO Extract dependency?
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 app = FastAPI()
 
 # Router used for getting data from Etherscan
@@ -43,32 +35,3 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"Indago": True, "Authors": ["Max", "Pontus"], "Website": "https://indago.ponbac.xyz"}
-
-
-@app.get("/accounts/", response_model=list[schemas.Account])
-def read_accounts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    accounts = crud.get_accounts(db, skip=skip, limit=limit)
-    return accounts
-
-
-@app.get("/accounts/{address}", response_model=schemas.Account)
-def read_account(address: str, db: Session = Depends(get_db)):
-    db_account = crud.get_account(db, address=address)
-    if db_account is None:
-        db_account = crud.create_account(
-            db, account=schemas.AccountCreate(address=address.lower()))
-        # raise HTTPException(status_code=404, detail=f'Account for [{address}] not found')
-
-    return db_account
-
-
-@app.get("/transactions/to/{address}", response_model=list[schemas.Transaction])
-def read_transactions_to_account(address: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    transactions = crud.get_transactions_to_account(db, address=address, skip=skip, limit=limit)
-    return transactions
-
-
-@app.get("/transactions/from/{address}", response_model=list[schemas.Transaction])
-def read_transactions_from_account(address: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    transactions = crud.get_transactions_from_account(db, address=address, skip=skip, limit=limit)
-    return transactions

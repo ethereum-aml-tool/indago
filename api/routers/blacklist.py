@@ -24,11 +24,39 @@ router = APIRouter(
 )
 
 
+@router.get("/summary/{address}", response_model=schemas.BlacklistSummary)
+def account_summary(address: str, db: Session = Depends(get_db)):
+    '''
+    returns: BlacklistSummary, containing the result of each blacklisting algorithm
+    converted to eth from wei where applicable
+    '''
+    summary: schemas.BlacklistSummary = schemas.BlacklistSummary(address=address)
+
+    haircut = crud.get_haircut(db, address)
+    if haircut:
+        summary.haircut_taint = haircut.taint / 10**18
+    
+    poison = crud.get_poison(db, address)
+    if poison:
+        summary.poison_taint = poison.flagged
+
+    fifo = crud.get_fifo(db, address)
+    if fifo:
+        summary.fifo_taint = fifo.tainted / 10**18
+    
+    seniority = crud.get_seniority(db, address)
+    if seniority:
+        summary.seniority_taint = seniority.tainted_balance / 10**18
+
+    return summary
+
+
 @router.get("/poison/{address}", response_model=schemas.Poison, tags=["blacklisting"])
 def read_poison(address: str, db: Session = Depends(get_db)):
     poison = crud.get_poison(db, address=address)
     if poison is None:
-        raise HTTPException(status_code=404, detail=f"Poison for [{address}] not found")
+        raise HTTPException(
+            status_code=404, detail=f"Poison for [{address}] not found")
     return poison
 
 
@@ -36,9 +64,12 @@ def read_poison(address: str, db: Session = Depends(get_db)):
 def read_haircut(address: str, db: Session = Depends(get_db)):
     haircut = crud.get_haircut(db, address=address)
     if haircut is None:
-        raise HTTPException(status_code=404, detail=f"Haircut for [{address}] not found")
-    haircut.taint = haircut.taint / 10 ** 18 # TODO Should be converted earlier...
-    haircut.balance = haircut.balance / 10 ** 18 # TODO Should be converted earlier...
+        raise HTTPException(
+            status_code=404, detail=f"Haircut for [{address}] not found")
+    # TODO Should be converted earlier...
+    haircut.taint = haircut.taint / 10 ** 18
+    # TODO Should be converted earlier...
+    haircut.balance = haircut.balance / 10 ** 18
     return haircut
 
 
@@ -54,6 +85,8 @@ def read_haircut(address: str, db: Session = Depends(get_db)):
 def read_seniority(address: str, db: Session = Depends(get_db)):
     seniority = crud.get_seniority(db, address=address)
     if seniority is None:
-        raise HTTPException(status_code=404, detail=f"Seniority for [{address}] not found")
-    seniority.tainted_balance = seniority.tainted_balance / 10 ** 18 # TODO Should be converted earlier...
+        raise HTTPException(
+            status_code=404, detail=f"Seniority for [{address}] not found")
+    # TODO Should be converted earlier...
+    seniority.tainted_balance = seniority.tainted_balance / 10 ** 18
     return seniority
