@@ -10,7 +10,7 @@ class Edge(BaseModel):
 
 class DARGraph(BaseModel):
     id: int = Field(..., alias='_id')
-    nodes: List[str]
+    nodes: List[dict]
     edges: List[Edge]
 
 
