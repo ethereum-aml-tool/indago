@@ -35,3 +35,8 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"Indago": True, "Authors": ["Max", "Pontus"], "Website": "https://indago.ponbac.xyz"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
