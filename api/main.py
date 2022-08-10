@@ -39,4 +39,11 @@ def read_root():
 
 @app.get("/health")
 def health():
+    try:
+        db = SessionLocal()
+        crud.get_seniority(db, '0xTEST')
+        db.close()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
     return {"status": "ok"}
