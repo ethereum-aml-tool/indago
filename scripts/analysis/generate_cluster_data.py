@@ -1,31 +1,35 @@
-from typing import Any, Optional
+from typing import Any, List, Optional
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 from pprint import pprint
 from db.mongo.database import IndagoSession
 from db.mongo.schemas import DARAddressMapping, DARGraph
 
 
+def filter_exchange_nodes(nodes, edges) -> list[str]:
+    '''
+    Calculates non-exchange nodes from graph data.
+    '''
+    non_exchange_nodes = []
+    for edge in edges:
+        # print(edge)
+        non_exchange_nodes.append(nodes[edge[0]])
+
+    return set(non_exchange_nodes)
+
+
 async def main(args: Any):
-    blacklisting_df = pd.read_csv(args.blacklisting_csv)
-    title = args.algorithm
+    blacklisting_df: pd.DataFrame = pd.read_csv(args.blacklisting_csv)
+    title: str = args.algorithm
+    output_path: str = args.output_path
 
     # MONGO
     db = IndagoSession
     dar_collection = db['dar']
     dar_map_collection = db['dar_map']
-
-    def filter_exchange_nodes(nodes, edges) -> list[str]:
-        '''
-        Calculates non-exchange nodes from graph data.
-        '''
-        non_exchange_nodes = []
-        for edge in edges:
-            # print(edge)
-            non_exchange_nodes.append(nodes[edge[0]])
-
-        return set(non_exchange_nodes)
 
     async def process_graphs(batch_size: int = 10000, max_graphs: Optional[int] = None):
         '''
@@ -86,9 +90,97 @@ async def main(args: Any):
 
         return np.array(node_counts), graphs_with_blacklisted
 
-    node_counts, sen_graphs = await process_graphs(batch_size=50000, max_graphs=None)
+    node_counts, bl_graphs = await process_graphs(batch_size=50000, max_graphs=None)
 
-    print(args)
+    generate_cluster_graphs(blacklisting_df, node_counts,
+                            bl_graphs, title, output_path)
+
+    del blacklisting_df, node_counts, bl_graphs
+    print(f"INFO: Done with {title} analysis!")
+
+
+def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graphs: List, title: str, output_path: str):
+    '''
+    Generates a histogram of the number of nodes in each graph.
+    '''
+    def reject_outliers(data, n_deviations=0.3):
+        mean = np.mean(data)
+        standard_deviation = np.std(data)
+        distance_from_mean = abs(data - mean)
+        not_outlier = distance_from_mean < n_deviations * standard_deviation
+        return data[not_outlier]
+
+    sns.set_style("whitegrid")
+    sns.set(rc={'figure.figsize': (15, 8)})
+
+    # Number of nodes in each graph
+    p = sns.histplot(data=reject_outliers(node_counts),
+                     stat='percent', shrink=8.25)
+    p.set_xlabel('Number of nodes/addresses in cluster', fontsize=16)
+    p.set_ylabel('Percentage of graphs', fontsize=16)
+    p.set_title('Distribution of number of nodes in DAR graphs', fontsize=16)
+    p.figure.savefig(f'{output_path}/{title}_cluster_histogram.png')
+
+    # Number of nodes in each graph with >0 nodes in blacklist
+    sen_node_counts = np.array([len(graph['nodes']) for graph in bl_graphs])
+    p = sns.histplot(data=reject_outliers(sen_node_counts),
+                     stat='percent', shrink=4.75)
+    p.set_xlabel('Number of nodes/addresses in cluster', fontsize=16)
+    p.set_ylabel('Percentage of graphs', fontsize=16)
+    p.set_title(
+        'Distribution of number of nodes in graphs with >0 flagged nodes', fontsize=16)
+    p.figure.savefig(
+        f'{output_path}/{title}_cluster_histogram_with_blacklisted.png')
+
+    # Flagged vs clean
+    flagged_counts = []
+    total_counts = []
+    for graph in tqdm(bl_graphs):
+        flagged = 0
+        total = 0
+        for address in filter_exchange_nodes(graph['nodes'], graph['edges']):
+            total += 1
+            try:
+                row = bl_df.loc[address]
+                flagged += 1
+                del row
+            except KeyError:
+                pass
+        flagged_counts.append(flagged)
+        total_counts.append(total)
+
+    avg_flagged = np.mean(flagged_counts)
+    avg_total = np.mean(total_counts)
+
+    print(f'STATS: average flagged user nodes={avg_flagged:.2f} nodes')
+    print(f'STATS: average total user nodes={avg_total:.2f} nodes')
+    print(
+        f'STATS: num clusters with a single flagged node={flagged_counts.count(1):,}')
+
+    # Flagged vs clean in flagged clusters
+    data = [sum(flagged_counts), sum(total_counts) - sum(flagged_counts)]
+    labels = ['Flagged', 'Clean']
+    colors = sns.color_palette('pastel')[0:5]
+    plt.pie(data, labels=labels, colors=colors,
+            autopct='%1.1f%%', shadow=True, startangle=90)
+    plt.title('Amount of flagged/clean nodes in flagged graphs', fontsize=16)
+    plt.savefig(f'{output_path}/{title}_flagged_pie.png')
+
+    # Graphs containing clean nodes
+    n_unflagged = []
+    for i, n in enumerate(flagged_counts):
+        n_unflagged.append(total_counts[i] - n)
+    clusters_with_clean = list(filter(lambda x: x > 0, n_unflagged))
+
+    data = [len(flagged_counts) - len(clusters_with_clean),
+            len(clusters_with_clean)]
+    labels = ['All flagged', 'Contains clean nodes']
+    colors = sns.color_palette('pastel')[0:5]
+
+    plt.pie(data, labels=labels, colors=colors,
+            autopct='%1.1f%%', shadow=True, startangle=90)
+    plt.title('Graphs containing clean nodes', fontsize=16)
+    plt.savefig(f'{output_path}/{title}_clean_pie.png')
 
 
 if __name__ == "__main__":
