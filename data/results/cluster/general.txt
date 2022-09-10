@@ -1,0 +1,20 @@
+INFO: 965,652 DAR graphs in collection
+INFO: Fetching 965,652 graphs, batch_size=50,000...
+1050000it [02:14, 7821.62it/s]                           
+DONE: 5,361,931 total nodes (addresses)
+STATS: average=5.55 nodes
+STATS: median=4.00 nodes
+STATS: min=3
+STATS: max=27,420
+STATS: standard deviation=39.00
+STATS: variance=1521.16
+
+---SENIORITY (TORNADO)---
+STATS: nodes cross found=342,981, percentage of total=6.40%
+STATS: graphs with >0 nodes in seniority=238,536, percentage of total=24.70%
+
+non-exchange nodes stats in flagged clusters
+100%|██████████| 238536/238536 [00:20<00:00, 11563.07it/s]
+STATS: average flagged user nodes=1.44 nodes
+STATS: average total user nodes=2.74 nodes
+STATS: num clusters with a single flagged node=180,645
