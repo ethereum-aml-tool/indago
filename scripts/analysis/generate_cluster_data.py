@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, List, Optional
 import pandas as pd
 import numpy as np
@@ -22,7 +23,10 @@ def filter_exchange_nodes(nodes, edges) -> list[str]:
 
 
 async def main(args: Any):
-    blacklisting_df: pd.DataFrame = pd.read_csv(args.blacklisting_csv)
+    print('INFO: Loading blacklisting results into memory...')
+    blacklisting_df: pd.DataFrame = pd.read_csv(args.blacklisting_csv, index_col=0)
+    pprint(blacklisting_df.head())
+
     title: str = args.algorithm
     output_path: str = args.output_path
 
@@ -61,7 +65,6 @@ async def main(args: Any):
                 for address in filter_exchange_nodes(graph['nodes'], graph['edges']):
                     try:
                         row = blacklisting_df.loc[address]
-                        # print(f'{row}')
                         if row['taint'] > 0:
                             nodes_in_blacklist += 1
                             if nodes_in_blacklist == 1:
@@ -90,8 +93,10 @@ async def main(args: Any):
 
         return np.array(node_counts), graphs_with_blacklisted
 
+    print('INFO: Processing clusters...')
     node_counts, bl_graphs = await process_graphs(batch_size=50000, max_graphs=None)
 
+    print('INFO: Generating plots...')
     generate_cluster_graphs(blacklisting_df, node_counts,
                             bl_graphs, title, output_path)
 
@@ -131,6 +136,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
         'Distribution of number of nodes in graphs with >0 flagged nodes', fontsize=16)
     p.figure.savefig(
         f'{output_path}/{title}_cluster_histogram_with_blacklisted.png')
+    plt.clf()
 
     # Flagged vs clean
     flagged_counts = []
@@ -165,6 +171,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
             autopct='%1.1f%%', shadow=True, startangle=90)
     plt.title('Amount of flagged/clean nodes in flagged graphs', fontsize=16)
     plt.savefig(f'{output_path}/{title}_flagged_pie.png')
+    plt.clf()
 
     # Graphs containing clean nodes
     n_unflagged = []
@@ -181,6 +188,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
             autopct='%1.1f%%', shadow=True, startangle=90)
     plt.title('Graphs containing clean nodes', fontsize=16)
     plt.savefig(f'{output_path}/{title}_clean_pie.png')
+    plt.clf()
 
 
 if __name__ == "__main__":
@@ -191,9 +199,9 @@ if __name__ == "__main__":
                         help='algorithm to run cluster data against (poison, haircut, fifo, seniority), used for titles')
     parser.add_argument('blacklisting_csv', type=str,
                         help='path to result file from blacklisting')
-    parser.add_argument('output_directory', type=str,
+    parser.add_argument('output_path', type=str,
                         help='where to save the output')
 
     args: Any = parser.parse_args()
 
-    main(args)
+    asyncio.run(main(args))
