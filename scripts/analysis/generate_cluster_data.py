@@ -16,19 +16,19 @@ def filter_exchange_nodes(nodes, edges) -> list[str]:
     '''
     non_exchange_nodes = []
     for edge in edges:
-        # print(edge)
         non_exchange_nodes.append(nodes[edge[0]])
 
     return set(non_exchange_nodes)
 
 
 async def main(args: Any):
-    print('INFO: Loading blacklisting results into memory...')
-    blacklisting_df: pd.DataFrame = pd.read_csv(args.blacklisting_csv, index_col=0)
-    pprint(blacklisting_df.head())
-
-    title: str = args.algorithm
+    title: str = args.algorithm.upper()
     output_path: str = args.output_path
+
+    print(f'INFO: Loading {title} blacklisting results into memory...')
+    blacklisting_df: pd.DataFrame = pd.read_csv(
+        args.blacklisting_csv, index_col=0)
+    pprint(blacklisting_df.tail(3))
 
     # MONGO
     db = IndagoSession
@@ -124,7 +124,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     p.set_xlabel('Number of nodes/addresses in cluster', fontsize=16)
     p.set_ylabel('Percentage of graphs', fontsize=16)
     p.set_title('Distribution of number of nodes in DAR graphs', fontsize=16)
-    p.figure.savefig(f'{output_path}/{title}_cluster_histogram.png')
+    p.figure.savefig(f'{output_path}/cluster_histogram.png')
 
     # Number of nodes in each graph with >0 nodes in blacklist
     sen_node_counts = np.array([len(graph['nodes']) for graph in bl_graphs])
@@ -133,7 +133,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     p.set_xlabel('Number of nodes/addresses in cluster', fontsize=16)
     p.set_ylabel('Percentage of graphs', fontsize=16)
     p.set_title(
-        'Distribution of number of nodes in graphs with >0 flagged nodes', fontsize=16)
+        f'[{title}] Distribution of number of nodes in graphs with >0 flagged nodes', fontsize=16)
     p.figure.savefig(
         f'{output_path}/{title}_cluster_histogram_with_blacklisted.png')
     plt.clf()
@@ -169,7 +169,8 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     colors = sns.color_palette('pastel')[0:5]
     plt.pie(data, labels=labels, colors=colors,
             autopct='%1.1f%%', shadow=True, startangle=90)
-    plt.title('Amount of flagged/clean nodes in flagged graphs', fontsize=16)
+    plt.title(
+        f'[{title}] Amount of flagged/clean nodes in flagged graphs', fontsize=16)
     plt.savefig(f'{output_path}/{title}_flagged_pie.png')
     plt.clf()
 
@@ -186,7 +187,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
 
     plt.pie(data, labels=labels, colors=colors,
             autopct='%1.1f%%', shadow=True, startangle=90)
-    plt.title('Graphs containing clean nodes', fontsize=16)
+    plt.title(f'[{title}] Graphs containing clean nodes', fontsize=16)
     plt.savefig(f'{output_path}/{title}_clean_pie.png')
     plt.clf()
 
