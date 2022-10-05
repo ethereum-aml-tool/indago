@@ -9,13 +9,16 @@
 
 
 from datetime import datetime
+from importlib.resources import path
+from logging import error
+from msilib.schema import Error
+from tokenize import Double
 from typing import Optional
 
 import psutil
 from src.blacklist.base import BaseBlacklist
 from utils.loader import DataframeLoader
 import pandas as pd
-import numpy as np
 
 
 class AdvancedFIFO(BaseBlacklist):
@@ -35,31 +38,41 @@ class AdvancedFIFO(BaseBlacklist):
         queue_dictionary = dict()
         for i in range(len(self.initial_blacklist)):
             new_queue = FifoQueue(5)
-            new_queue.add(-10**25, self.initial_blacklist.iat[i], -1)
+            new_queue.add(-10**45, self.initial_blacklist.iat[i], -1)
             queue_dictionary[self.initial_blacklist.iat[i]] = new_queue
         new_queue = FifoQueue(5)
-        new_queue.add(10**25, "origin", -1)
+        new_queue.add(10**45, "origin", -1)
         queue_dictionary["block_reward"] = new_queue
 
-        skipped_transactions = 0
+        #skipped_transactions = 0
         processed_transactions = 0
+        forced_transactions = 0
+        Transactions_from_none = 0
         chunk_counter = 0
         chunk_size = 10000
+
         start_time = datetime.now()
         for tx_chunk in self.data_loader.yield_traces(chunk_size, start_block, end_block):
+
             pd.options.mode.chained_assignment = None
-            nonzero_traces = tx_chunk[(tx_chunk.value.astype(int) > 0) & (
+
+            nonzero_traces = tx_chunk[(tx_chunk.value > 0) & (
                 tx_chunk.status == 1)].dropna(subset=["to_address", "value"])
             nonzero_traces.reset_index(inplace=True)
             nonzero_traces.drop("index", axis=1, inplace=True)
-            from_adresses = nonzero_traces.iloc[:, 3].astype(str)
+
+            from_addresses = nonzero_traces.iloc[:, 3].astype(str)
             to_addresses = nonzero_traces.iloc[:, 4].astype(str)
             transferred_balances = nonzero_traces.iloc[:, 5]
-
+            
             for i in range(len(nonzero_traces)):
-                from_address = from_adresses[i]
+
+                from_address = from_addresses[i]
                 to_address = to_addresses[i]
-                left_to_transfer = transferred_balances[i]
+                left_to_transfer = int(transferred_balances[i])
+
+                if from_address == "nan":
+                    from_address = "block_reward"
 
                 from_queue = queue_dictionary.get(from_address)
                 to_queue = queue_dictionary.get(to_address)
@@ -67,60 +80,82 @@ class AdvancedFIFO(BaseBlacklist):
                 if(to_queue == None):
                     to_queue = FifoQueue(5)
                     queue_dictionary[to_address] = to_queue
+                if(from_queue == None):
+                    Transactions_from_none += 1
+                    from_queue = FifoQueue(5)
+                    queue_dictionary[from_address] = from_queue
 
-                if from_queue != None and from_queue.get_balance() != 0:
-                    print(f'from_queue={from_queue}')
-                    print(f'balance={from_queue.get_balance()}')
-                    print(f'left_to_transfer={left_to_transfer}')
-                if (from_queue != None) and (not from_queue.is_empty()) and from_queue.get_balance() >= left_to_transfer:
-                    processed_transactions += 1
-                    last_value = 0
-                    done = False
-                    while not done:
-                        queue_value, origin_address, origin_block = from_queue.peak()
-                        if to_queue.is_full():
-                            to_queue.expand()
+                processed_transactions += 1
+                last_value = 0
+                done = False
 
-                        if queue_value < 0:
-                            if last_value != 0:
-                                to_queue.add(last_value, "clean", -1)
-                                left_to_transfer -= abs(last_value)
-                                last_value = 0
-                                if to_queue.is_full():
-                                    to_queue.expand()
+                while not done:
+                    if from_queue.is_empty():
+                        to_queue.add(left_to_transfer, "clean*", -1)
+                        forced_transactions += 1
+                        break
 
-                            if -queue_value > left_to_transfer:
-                                to_queue.add(-left_to_transfer,
-                                             origin_address, origin_block)
-                                from_queue.change_first(
-                                    queue_value + left_to_transfer)
-                                done = True
-                            elif -queue_value == left_to_transfer:
-                                to_queue.add(
-                                    queue_value, origin_address, origin_block)
-                                from_queue.pop()
+                    queue_value, origin_address, origin_block = from_queue.peak()
+                    if to_queue.is_full():
+                        to_queue.expand()
+
+                    if queue_value < 0:
+                        if last_value != 0:
+                            to_queue.add(last_value, "clean", -1)
+                            left_to_transfer -= abs(last_value)
+                            last_value = 0
+                            if to_queue.is_full():
+                                to_queue.expand()
+
+                        if -queue_value > left_to_transfer:
+                            to_queue.add(-left_to_transfer,origin_address, origin_block)
+                            from_queue.change_first(queue_value + left_to_transfer)
+                            done = True
+                        elif -queue_value == left_to_transfer:
+                            to_queue.add(queue_value, origin_address, origin_block)
+                            from_queue.pop()
+                            done = True
+                        else:
+                            from_queue.pop()
+                            if -queue_value < left_to_transfer and from_queue.is_empty():
+                                forced_transactions += 1
+                                to_queue.add(-left_to_transfer, origin_address, origin_block)
                                 done = True
                             else:
-                                to_queue.add(
-                                    queue_value, origin_address, origin_block)
+                                to_queue.add(queue_value, origin_address, origin_block)
                                 left_to_transfer += queue_value
-                                from_queue.pop()
+                    else:
+                        # This is done to pool clean values, thus saving memory
+                        current_value = last_value + queue_value
+
+                        if current_value > left_to_transfer:
+                            to_queue.add(left_to_transfer, "clean", -1)
+                            from_queue.change_first(
+                                current_value - left_to_transfer)
+                            done = True
+                        elif current_value == left_to_transfer:
+                            to_queue.add(current_value, "clean", -1)
+                            from_queue.pop()
+                            done = True
                         else:
-                            current_value = last_value + queue_value
-                            if current_value > left_to_transfer:
-                                to_queue.add(left_to_transfer, "clean", -1)
-                                from_queue.change_first(
-                                    current_value - left_to_transfer)
-                                done = True
-                            elif current_value == left_to_transfer:
-                                to_queue.add(current_value, "clean", -1)
-                                from_queue.pop()
+                            from_queue.pop()
+                            if current_value < left_to_transfer and from_queue.is_empty():
+                                forced_transactions += 1
+                                to_queue.add(left_to_transfer, origin_address, origin_block)
                                 done = True
                             else:
                                 last_value = current_value
-                                from_queue.pop()
-                else:
-                    skipped_transactions += 1
+                    if from_queue.get_balance() < 0:
+                        print("queue broken ")
+                        print(i)
+                        print(from_queue.get_balance())
+                        print(from_queue.queue_values_to_string())
+                        print(to_queue.queue_values_to_string())
+                        print(left_to_transfer)
+                        print(nonzero_traces.iloc[i])
+                        return error("queue has a negative value")
+                    
+
 
             # save some stats every x chunks
             chunk_counter += 1
@@ -140,14 +175,18 @@ class AdvancedFIFO(BaseBlacklist):
                 print(f'RAM usage: {ram_usage} GB.')
                 print(
                     f'{len(nonzero_traces)} valid transactions in current chunk...')
-                print(f'{skipped_transactions} transactions skipped.')
+                #print(f'{skipped_transactions} transactions skipped.')
+                print(f'{forced_transactions} transactions forced.')
+                print(f'{Transactions_from_none} transactions from None.')
 
                 # log these stats to csv
                 run_data = {
                     'chunk': chunk_counter,
                     'rows_processed': int(rows_processed.replace(',', '')),
                     'n_tainted': int(n_taints.replace(',', '')),
-                    'n_skipped': skipped_transactions,
+                    #'n_skipped': skipped_transactions,
+                    'n_none_transactions': Transactions_from_none,
+                    'n_forced': forced_transactions,
                     'max_block': max_block,
                     'processed_after': processed_after,
                     'ram_usage_gb': ram_usage,
@@ -189,11 +228,12 @@ class AdvancedFIFO(BaseBlacklist):
 
 class FifoQueue:
     def __init__(self, max_size):
+        max_size = int(max_size)
         if max_size == 0:
             return ValueError("Fifo_queue must be atleast of length 1")
-        self.balance = 0
+        self.balance = int(0)
         self.max_size = max_size
-        self.queue_values = [0] * max_size
+        self.queue_values = [int(0)] * max_size
         self.origin_addresses = [""] * max_size
         self.origin_blocks = [-1] * max_size
         self.front = 0
@@ -223,6 +263,11 @@ class FifoQueue:
         if self.first_empty == self.front:
             self.full = True
         self.empty = False
+
+
+    def empty_queue(self):
+        while not self.empty:
+            self.pop()
 
     def is_empty(self):
         return self.empty
