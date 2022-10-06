@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Set
 
 import pandas as pd
+from src.blacklist.fifo_blacklister import FIFO
 from utils.loader import DataframeLoader
 from src.blacklist.poison_blacklister import Poison
 from src.blacklist.haircut_blacklister import Haircut
@@ -54,6 +55,12 @@ def main(args: Any):
             initial_blacklist=blacklist,
             save_dir=args.save_dir
         )
+    elif args.algorithm == 'fifo-simple':
+        algo = FIFO(
+            loader,
+            initial_blacklist=blacklist,
+            save_dir=args.save_dir
+        )
     elif args.algorithm == 'seniority':
         algo = Seniority(
             loader,
@@ -77,7 +84,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     parser: ArgumentParser = ArgumentParser()
     parser.add_argument('algorithm', type=str,
-                        help='algorithm to use (poison, haircut, fifo, seniority)')
+                        help='algorithm to use (poison, haircut, fifo, fifo-simple, seniority)')
     parser.add_argument('blocks_csv', type=str, help='path to block data')
     parser.add_argument('traces_csv', type=str,
                         help='path to transaction data')

@@ -1,5 +1,5 @@
 ##!/bin/bash
-ALGORITHM="fifo"
+ALGORITHM="fifo-simple"
 OUTPUT_DIR="/data/blacklist"
 #OUTPUT_DIR="/media/ponbac/BigHDD/ethereum"
 BLOCKS_CSV="${OUTPUT_DIR}/blocks-sorted.csv"
