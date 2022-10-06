@@ -35,7 +35,7 @@ fi
 echo "Running algorithm..."
 python3 scripts/run_blacklisting.py $ALGORITHM $BLOCKS_CSV $TRACES_CSV \
  $KNOWN_ADDRESSES_CSV $TORNADO_CSV $OUTPUT_DIR \
-  --only-flagged
+  --only-flagged --end-block 14700000
 
 echo "Uploading result..."
 gsutil -m cp ${OUTPUT_DIR}/${ALGORITHM}-result.csv gs://${BUCKET_NAME}/blacklisting/${ALGORITHM}-flagged-result.csv
