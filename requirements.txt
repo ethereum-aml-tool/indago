@@ -1,8 +1,8 @@
 fastapi
 pydantic
 uvicorn[standard]
-pandas
-numpy
+pandas==1.4.3
+numpy==1.23.1
 dask[complete]
 tqdm
 gcsfs
@@ -14,12 +14,11 @@ google-cloud-bigquery
 boto3[crt]
 jsonlines
 networkx
-matplotlib
+matplotlib==3.5.2
 scipy
 igraph
-motor
-pymongo
+motor==3.0.0
+pymongo==4.2.0
 ijson
 ipython
-seaborn
-#multimerge
+seaborn==0.12.0
