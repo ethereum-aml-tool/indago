@@ -209,12 +209,12 @@ class AdvancedFIFO(BaseBlacklist):
                     run_data.to_csv(
                         f'{self.save_dir}/fifo-rundata.csv', mode='a', header=False, index=False)
 
-        for key, value in queue_dictionary.items():
-            if key != "block_reward":
-                taint, untainted = value.sum_taint()
-                if taint > 0:
-                    print(
-                        f'{key}: balance={value.get_balance()} taint={taint} untaint={untainted}')
+        # for key, value in queue_dictionary.items():
+        #     if key != "block_reward":
+        #         taint, untainted = value.sum_taint()
+        #         if taint > 0:
+        #             print(
+        #                 f'{key}: balance={value.get_balance()} taint={taint} untaint={untainted}')
         # blacklist_dataframe = pd.DataFrame(queue_dictionary.items(), columns = ["address", "queue"])
         # length = len(blacklist_dataframe)
         # np_array =  np.empty([length, 4], dtype=object)
