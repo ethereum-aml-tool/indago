@@ -8,29 +8,7 @@ RESULT_FILE_NAMES=( "poison-flagged-result.csv" "haircut-flagged-result.csv" "se
 OUTPUT_DIRS=("/data/graphs/poison" "/data/graphs/haircut" "/data/graphs/seniority" "/data/graphs/poison_tornado" "/data/graphs/haircut_tornado" "/data/graphs/seniority_tornado")
 BUCKET_NAME="eth-aml-data"
 
-mkdir -p $OUTPUT_DIR
-
-echo "Downloading data if needed..."
-if test -f $KNOWN_ADDRESSES_CSV; then
-    echo "known-addresses.csv already exists, skipping download"
-else
-    gsutil -m cp gs://${BUCKET_NAME}/known-addresses.csv $OUTPUT_DIR
-fi
-if test -f $TORNADO_CSV; then
-    echo "tornado.csv already exists, skipping download"
-else
-    gsutil -m cp gs://${BUCKET_NAME}/tornado.csv $OUTPUT_DIR
-fi
-if test -f $BLOCKS_CSV; then
-    echo "blocks-sorted.csv already exists, skipping download"
-else
-    gsutil -m cp gs://${BUCKET_NAME}/sorted/blocks-sorted.csv $OUTPUT_DIR
-fi
-if test -f $TRACES_CSV; then
-    echo "traces-sorted.csv already exists, skipping download"
-else
-    gsutil -m cp gs://${BUCKET_NAME}/sorted/traces-sorted.csv $OUTPUT_DIR
-fi
+mkdir -p $RESULT_PATH
 
 for i in "${!TITLES[@]}"; do
     echo "Downloading results file if needed..."
