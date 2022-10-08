@@ -65,7 +65,7 @@ async def main(args: Any):
                 for address in filter_exchange_nodes(graph['nodes'], graph['edges']):
                     try:
                         row = blacklisting_df.loc[address]
-                        if row['taint'] > 0:
+                        if row['taint'] > 0 or row['flagged'] == True :
                             nodes_in_blacklist += 1
                             if nodes_in_blacklist == 1:
                                 graphs_with_blacklisted.append(graph)
@@ -85,7 +85,7 @@ async def main(args: Any):
         print(f'STATS: max={(np.max(node_counts)):,}')
         print(f'STATS: standard deviation={(np.std(node_counts)):.2f}')
         print(f'STATS: variance={(np.var(node_counts)):.2f}')
-        print(f'\n---{title} (TORNADO)---')
+        print(f'\n---{title}---')
         print(
             f'STATS: nodes cross found={total_nodes_in_blacklist:,}, percentage of total={(total_nodes_in_blacklist / sum(node_counts) * 100):.2f}%')
         print(
