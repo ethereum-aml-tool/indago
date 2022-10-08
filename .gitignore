@@ -26,3 +26,5 @@ experimental_notebooks/data/known-addresses.csv
 experimental_notebooks/data/mini-traces.csv
 experimental_notebooks/data/tornado.csv
 experimental_notebooks/results/fifo-rundata.csv
+experimental_notebooks/results/fifo-simple-result.csv
+experimental_notebooks/results/fifo-simple-rundata.csv

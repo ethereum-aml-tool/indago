@@ -93,48 +93,60 @@ class FIFO(BaseBlacklist):
                 if(to_queue == None):
                     to_queue = FifoQueue(5)
                     queue_dictionary[to_address] = to_queue
+                if(from_queue == None):
+                    from_queue = FifoQueue(5)
+                    queue_dictionary[from_address] = from_queue
+                    Transactions_from_none += 1
 
-                if (from_queue != None) and (not from_queue.is_empty()) and from_queue.get_balance() >= left_to_transfer:
-                    current_value = 0
-                    done = False
-                    while not done:
-                        queue_value = from_queue.peak()
-                        if ((queue_value > 0) != (current_value > 0)) and current_value != 0:
+                current_value = 0
+                done = False
+                while not done:
+                    if from_queue.is_empty():
+                        if current_value != 0:
                             to_queue.add(current_value)
-                            left_to_transfer -= abs(current_value)
-                            current_value = queue_value
-                        else:
-                            current_value += queue_value
+                        to_queue.add(left_to_transfer-abs(current_value))
+                        forced_transactions += 1
+                        break
+                    queue_value = from_queue.peak()
+                    if ((queue_value > 0) != (current_value > 0)) and current_value != 0:
+                        to_queue.add(current_value)
+                        left_to_transfer -= abs(current_value)
+                        current_value = queue_value
+                    else:
+                        current_value += queue_value
 
-                        if to_queue.is_full():
-                            to_queue.expand()
-
-                        if current_value < 0:
-                            if -current_value > left_to_transfer:
-                                to_queue.add(-left_to_transfer)
-                                from_queue.change_first(
-                                    current_value + left_to_transfer)
-                                done = True
-                            elif -current_value == left_to_transfer:
-                                to_queue.add(-left_to_transfer)
-                                from_queue.pop()
-                                done = True
-                            else:
-                                from_queue.pop()
+                    if current_value < 0:
+                        if -current_value > left_to_transfer:
+                            to_queue.add(-left_to_transfer)
+                            from_queue.change_first(
+                                current_value + left_to_transfer)
+                            done = True
+                        elif -current_value == left_to_transfer:
+                            to_queue.add(-left_to_transfer)
+                            from_queue.pop()
+                            done = True
                         else:
-                            if current_value > left_to_transfer:
-                                to_queue.add(left_to_transfer)
-                                from_queue.change_first(
-                                    current_value - left_to_transfer)
+                            from_queue.pop()
+                            if -current_value < left_to_transfer and from_queue.is_empty():
+                                forced_transactions += 1
+                                to_queue.add(-left_to_transfer)
                                 done = True
-                            elif current_value == left_to_transfer:
+                    else:
+                        if current_value > left_to_transfer:
+                            to_queue.add(left_to_transfer)
+                            from_queue.change_first(
+                                current_value - left_to_transfer)
+                            done = True
+                        elif current_value == left_to_transfer:
+                            to_queue.add(left_to_transfer)
+                            from_queue.pop()
+                            done = True
+                        else:
+                            from_queue.pop()
+                            if current_value < left_to_transfer and from_queue.is_empty():
+                                forced_transactions += 1
                                 to_queue.add(left_to_transfer)
-                                from_queue.pop()
                                 done = True
-                            else:
-                                from_queue.pop()
-                else:
-                    skipped += 1
 
             # save some stats every x chunks
             chunk_counter += 1
@@ -194,6 +206,12 @@ class FIFO(BaseBlacklist):
         pbar.close()
         self._save_to_csv(queue_dictionary, f'{self.save_dir}/fifo-simple-result.csv')
         print(f'Finished processing {end_block:n} blocks.')
+        run_data = {
+                    'n_none_transactions': Transactions_from_none,
+                    'n_forced': forced_transactions,
+                }
+        print(run_data)
+
 
     def _save_to_csv(self, data_dict, path):
         HEADER = ["address", "untainted", "tainted"]
@@ -219,7 +237,6 @@ class FifoQueue:
         self.queue = [0] * max_size
         self.front = 0
         self.first_empty = 0
-        self.full = False
         self.empty = True
 
     def pop(self):
@@ -232,22 +249,14 @@ class FifoQueue:
         self.full = False
 
     def add(self, new_value):
-        if self.full == True:
-            return BufferError("queue is full")
         self.balance += abs(new_value)
         self.queue[self.first_empty] = new_value
         self.first_empty += 1
         if self.first_empty == self.max_size:
             self.first_empty = 0
         if self.first_empty == self.front:
-            self.full = True
+            self.expand()
         self.empty = False
-
-    def is_empty(self):
-        return self.empty
-
-    def is_full(self):
-        return self.full
 
     def peak(self):
         return self.queue[self.front]
@@ -255,6 +264,9 @@ class FifoQueue:
     def change_first(self, new_value):
         self.balance -= abs(self.queue[self.front]) - abs(new_value)
         self.queue[self.front] = new_value
+    
+    def is_empty(self):
+        return self.empty
 
     def expand(self):
         new_max_size = self.max_size + 5
@@ -312,7 +324,7 @@ class FifoQueue:
         tainted = 0
         untainted = 0
         temp_front = self.front
-        temp_full = self.is_full()
+        temp_full = self.first_empty == self.front and not self.empty
 
         while not done:
             if temp_front == self.first_empty and not temp_full:
