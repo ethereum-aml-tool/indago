@@ -171,7 +171,7 @@ class DataframeLoader(DataLoader):
             return
 
         if start_block is not None:
-            print(f'\nStart block enabled, fast-forwarding to block [{start_block}]...')
+            print(f'\nStart block enabled, fast-forwarding to block [{start_block}]...\n')
 
         for chunk in pd.read_csv(self._traces_csv, chunksize=chunk_size):
             if start_block is not None:

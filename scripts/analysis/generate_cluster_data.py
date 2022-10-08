@@ -65,7 +65,7 @@ async def main(args: Any):
                 for address in filter_exchange_nodes(graph['nodes'], graph['edges']):
                     try:
                         row = blacklisting_df.loc[address]
-                        if row['taint'] > 0 or row['flagged'] == True :
+                        if row['taint'] > 0 or row['flagged'] == 'True':
                             nodes_in_blacklist += 1
                             if nodes_in_blacklist == 1:
                                 graphs_with_blacklisted.append(graph)

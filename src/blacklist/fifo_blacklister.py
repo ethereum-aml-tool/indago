@@ -157,7 +157,8 @@ class FIFO(BaseBlacklist):
                 processed_after = (datetime.now() - start_time)
                 ram_usage = round(psutil.virtual_memory().used / (1000**3), 2)
 
-                pbar.update(max_block - pbar.n)
+                pbar.update(
+                    (max_block - start_block if start_block is not None else 0) - pbar.n)
 
                 # print(
                 #     f'\nProcessed chunk {chunk_counter}, ~{rows_processed} total transactions.')
@@ -204,14 +205,14 @@ class FIFO(BaseBlacklist):
 
         pbar.update(end_block - pbar.n)
         pbar.close()
-        self._save_to_csv(queue_dictionary, f'{self.save_dir}/fifo-simple-result.csv')
+        self._save_to_csv(queue_dictionary,
+                          f'{self.save_dir}/fifo-simple-result.csv')
         print(f'Finished processing {end_block:n} blocks.')
         run_data = {
-                    'n_none_transactions': Transactions_from_none,
-                    'n_forced': forced_transactions,
-                }
+            'n_none_transactions': Transactions_from_none,
+            'n_forced': forced_transactions,
+        }
         print(run_data)
-
 
     def _save_to_csv(self, data_dict, path):
         HEADER = ["address", "untainted", "tainted"]
@@ -264,7 +265,7 @@ class FifoQueue:
     def change_first(self, new_value):
         self.balance -= abs(self.queue[self.front]) - abs(new_value)
         self.queue[self.front] = new_value
-    
+
     def is_empty(self):
         return self.empty
 
