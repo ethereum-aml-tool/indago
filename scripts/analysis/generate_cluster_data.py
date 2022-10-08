@@ -50,6 +50,8 @@ async def main(args: Any):
         graphs_with_blacklisted = []
         total_nodes_in_blacklist = 0
 
+        isPoison = 'poison' in title.lower()
+
         i = 0
         print(
             f'INFO: Fetching {max_graphs:,} graphs, batch_size={batch_size:,}...')
@@ -65,10 +67,16 @@ async def main(args: Any):
                 for address in filter_exchange_nodes(graph['nodes'], graph['edges']):
                     try:
                         row = blacklisting_df.loc[address]
-                        if row['taint'] > 0 or row['flagged'] == 'True':
-                            nodes_in_blacklist += 1
-                            if nodes_in_blacklist == 1:
-                                graphs_with_blacklisted.append(graph)
+                        if isPoison:
+                            if row['flagged'] == True:
+                                nodes_in_blacklist += 1
+                                if nodes_in_blacklist == 1:
+                                    graphs_with_blacklisted.append(graph)
+                        else:
+                            if row['taint'] > 0:
+                                nodes_in_blacklist += 1
+                                if nodes_in_blacklist == 1:
+                                    graphs_with_blacklisted.append(graph)
                         del row
                     except KeyError:
                         pass
@@ -78,6 +86,7 @@ async def main(args: Any):
             i += 1
         pbar.close()
 
+        # TODO: Print to CSV!
         print(f'DONE: {sum(node_counts):,} total nodes (addresses)')
         print(f'STATS: average={(np.mean(node_counts)):.2f} nodes')
         print(f'STATS: median={(np.median(node_counts)):.2f} nodes')
@@ -124,7 +133,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     p.set_xlabel('Number of nodes/addresses in cluster', fontsize=16)
     p.set_ylabel('Percentage of graphs', fontsize=16)
     p.set_title('Distribution of number of nodes in DAR graphs', fontsize=16)
-    p.figure.savefig(f'{output_path}/cluster_histogram.png')
+    p.figure.savefig(f'{output_path}/{title.split[0]}_cluster_histogram.png')
 
     # Number of nodes in each graph with >0 nodes in blacklist
     sen_node_counts = np.array([len(graph['nodes']) for graph in bl_graphs])
@@ -135,7 +144,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     p.set_title(
         f'[{title}] Distribution of number of nodes in graphs with >0 flagged nodes', fontsize=16)
     p.figure.savefig(
-        f'{output_path}/{title}_cluster_histogram_with_blacklisted.png')
+        f'{output_path}/{title.split[0]}_cluster_histogram_with_blacklisted.png')
     plt.clf()
 
     # Flagged vs clean
@@ -171,7 +180,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
             autopct='%1.1f%%', shadow=True, startangle=90)
     plt.title(
         f'[{title}] Amount of flagged/clean nodes in flagged graphs', fontsize=16)
-    plt.savefig(f'{output_path}/{title}_flagged_pie.png')
+    plt.savefig(f'{output_path}/{title.split[0]}_flagged_pie.png')
     plt.clf()
 
     # Graphs containing clean nodes
@@ -188,7 +197,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     plt.pie(data, labels=labels, colors=colors,
             autopct='%1.1f%%', shadow=True, startangle=90)
     plt.title(f'[{title}] Graphs containing clean nodes', fontsize=16)
-    plt.savefig(f'{output_path}/{title}_clean_pie.png')
+    plt.savefig(f'{output_path}/{title.split[0]}_clean_pie.png')
     plt.clf()
 
 
