@@ -19,3 +19,10 @@ experimental_notebooks/results/FIFO_blacklist_sum.csv
 experimental_notebooks/results/Advanced_FIFO_blacklist.csv
 .env
 .ipynb_checkpoints/
+experimental_notebooks/data/blocks-sorted.csv
+experimental_notebooks/data/cache/miners.csv
+experimental_notebooks/data/chunk.csv
+experimental_notebooks/data/known-addresses.csv
+experimental_notebooks/data/mini-traces.csv
+experimental_notebooks/data/tornado.csv
+experimental_notebooks/results/fifo-rundata.csv
