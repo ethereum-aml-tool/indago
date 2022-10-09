@@ -90,10 +90,14 @@ async def main(args: Any):
 
         try:
             with open(f"{output_path}/{title.split()[0]}-misc.txt", 'a') as f:
-                f.write(f'DONE: {sum(node_counts):,} total nodes (addresses)\n')
-                f.write(f'STATS: {(sum(node_counts) - n_user_nodes):,} user nodes\n')
+                f.write(
+                    f'STATS: {sum(node_counts):,} total nodes (addresses)\n')
+                f.write(f'STATS: {n_user_nodes:,} user nodes\n')
+                f.write(
+                    f'STATS: {(sum(node_counts) - n_user_nodes):,} exchange nodes\n')
                 f.write(f'STATS: average={(np.mean(node_counts)):.2f} nodes\n')
-                f.write(f'STATS: median={(np.median(node_counts)):.2f} nodes\n')
+                f.write(
+                    f'STATS: median={(np.median(node_counts)):.2f} nodes\n')
                 f.write(f'STATS: min={(np.min(node_counts))}\n')
                 f.write(f'STATS: max={(np.max(node_counts)):,}\n')
                 f.write(
@@ -190,13 +194,14 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     try:
         with open(f"{output_path}/{title.split()[0]}-misc.txt", 'a') as f:
             f.write('---Flagged vs Clean---\n')
-            f.write(f'STATS: average flagged user nodes={avg_flagged:.2f} nodes\n')
+            f.write(
+                f'STATS: average flagged user nodes={avg_flagged:.2f} nodes\n')
             f.write(f'STATS: average total user nodes={avg_total:.2f} nodes\n')
             f.write(
                 f'STATS: num clusters with a single flagged node={flagged_counts.count(1):,}\n')
     except IOError:
         print("I/O error")
-        
+
     print(f'STATS: average flagged user nodes={avg_flagged:.2f} nodes')
     print(f'STATS: average total user nodes={avg_total:.2f} nodes')
     print(
