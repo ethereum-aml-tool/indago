@@ -34,6 +34,11 @@ def is_flagged(address: str) -> bool:
     """
     db = SessionLocal()
     tainted = crud.get_seniority(db, address=address)
+    if tainted is None:
+        tainted = crud.get_haircut(db, address=address)
+        if tainted is not None:
+            if tainted.taint / 10**18 < 0.01:
+                tainted = None
     db.close()
 
     return True if tainted is not None else False
@@ -67,7 +72,7 @@ async def get_graph(address: Optional[str] = None, id: Optional[int] = None):
                 exchange_nodes.append(graph['nodes'][edge[1]])
             non_exchange_nodes = set(non_exchange_nodes)
             exchange_nodes = set(exchange_nodes)
-            
+
             checked_nodes = []
             for node in non_exchange_nodes:
                 if is_flagged(node):
