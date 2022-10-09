@@ -47,6 +47,7 @@ async def main(args: Any):
             max_graphs = n_graphs
 
         node_counts = []
+        n_user_nodes = 0
         graphs_with_blacklisted = []
         total_nodes_in_blacklist = 0
 
@@ -65,6 +66,7 @@ async def main(args: Any):
 
                 nodes_in_blacklist = 0
                 for address in filter_exchange_nodes(graph['nodes'], graph['edges']):
+                    n_user_nodes += 1
                     try:
                         row = blacklisting_df.loc[address]
                         if isPoison:
@@ -89,6 +91,7 @@ async def main(args: Any):
         try:
             with open(f"{output_path}/{title.split()[0]}-misc.txt", 'a') as f:
                 f.write(f'DONE: {sum(node_counts):,} total nodes (addresses)\n')
+                f.write(f'STATS: {(sum(node_counts) - n_user_nodes):,} user nodes\n')
                 f.write(f'STATS: average={(np.mean(node_counts)):.2f} nodes\n')
                 f.write(f'STATS: median={(np.median(node_counts)):.2f} nodes\n')
                 f.write(f'STATS: min={(np.min(node_counts))}\n')
@@ -98,13 +101,12 @@ async def main(args: Any):
                 f.write(f'STATS: variance={(np.var(node_counts)):.2f}\n')
                 f.write(f'\n---{title}---\n')
                 f.write(
-                    f'STATS: nodes cross found={total_nodes_in_blacklist:,}, percentage of total={(total_nodes_in_blacklist / sum(node_counts) * 100):.2f}%\n')
+                    f'STATS: user nodes cross found={total_nodes_in_blacklist:,}, percentage of total={(total_nodes_in_blacklist / n_user_nodes * 100):.2f}%\n')
                 f.write(
                     f'STATS: graphs with >0 nodes in {title}={len(graphs_with_blacklisted):,}, percentage of total={(len(graphs_with_blacklisted) / n_graphs * 100):.2f}%\n')
         except IOError:
             print("I/O error")
 
-        # TODO: Print to CSV!
         print(f'DONE: {sum(node_counts):,} total nodes (addresses)')
         print(f'STATS: average={(np.mean(node_counts)):.2f} nodes')
         print(f'STATS: median={(np.median(node_counts)):.2f} nodes')
