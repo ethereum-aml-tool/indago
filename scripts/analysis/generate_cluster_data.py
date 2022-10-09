@@ -86,6 +86,24 @@ async def main(args: Any):
             i += 1
         pbar.close()
 
+        try:
+            with open(f"{output_path}/{title.split()[0]}-misc.txt", 'a') as f:
+                f.write(f'DONE: {sum(node_counts):,} total nodes (addresses)\n')
+                f.write(f'STATS: average={(np.mean(node_counts)):.2f} nodes\n')
+                f.write(f'STATS: median={(np.median(node_counts)):.2f} nodes\n')
+                f.write(f'STATS: min={(np.min(node_counts))}\n')
+                f.write(f'STATS: max={(np.max(node_counts)):,}\n')
+                f.write(
+                    f'STATS: standard deviation={(np.std(node_counts)):.2f}\n')
+                f.write(f'STATS: variance={(np.var(node_counts)):.2f}\n')
+                f.write(f'\n---{title}---\n')
+                f.write(
+                    f'STATS: nodes cross found={total_nodes_in_blacklist:,}, percentage of total={(total_nodes_in_blacklist / sum(node_counts) * 100):.2f}%\n')
+                f.write(
+                    f'STATS: graphs with >0 nodes in {title}={len(graphs_with_blacklisted):,}, percentage of total={(len(graphs_with_blacklisted) / n_graphs * 100):.2f}%\n')
+        except IOError:
+            print("I/O error")
+
         # TODO: Print to CSV!
         print(f'DONE: {sum(node_counts):,} total nodes (addresses)')
         print(f'STATS: average={(np.mean(node_counts)):.2f} nodes')
@@ -133,7 +151,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     p.set_xlabel('Number of nodes/addresses in cluster', fontsize=16)
     p.set_ylabel('Percentage of graphs', fontsize=16)
     p.set_title('Distribution of number of nodes in DAR graphs', fontsize=16)
-    p.figure.savefig(f'{output_path}/{title.split[0]}_cluster_histogram.png')
+    p.figure.savefig(f'{output_path}/{title.split()[0]}_cluster_histogram.png')
 
     # Number of nodes in each graph with >0 nodes in blacklist
     sen_node_counts = np.array([len(graph['nodes']) for graph in bl_graphs])
@@ -144,7 +162,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     p.set_title(
         f'[{title}] Distribution of number of nodes in graphs with >0 flagged nodes', fontsize=16)
     p.figure.savefig(
-        f'{output_path}/{title.split[0]}_cluster_histogram_with_blacklisted.png')
+        f'{output_path}/{title.split()[0]}_cluster_histogram_with_blacklisted.png')
     plt.clf()
 
     # Flagged vs clean
@@ -167,6 +185,16 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     avg_flagged = np.mean(flagged_counts)
     avg_total = np.mean(total_counts)
 
+    try:
+        with open(f"{output_path}/{title.split()[0]}-misc.txt", 'a') as f:
+            f.write('---Flagged vs Clean---\n')
+            f.write(f'STATS: average flagged user nodes={avg_flagged:.2f} nodes\n')
+            f.write(f'STATS: average total user nodes={avg_total:.2f} nodes\n')
+            f.write(
+                f'STATS: num clusters with a single flagged node={flagged_counts.count(1):,}\n')
+    except IOError:
+        print("I/O error")
+        
     print(f'STATS: average flagged user nodes={avg_flagged:.2f} nodes')
     print(f'STATS: average total user nodes={avg_total:.2f} nodes')
     print(
@@ -180,7 +208,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
             autopct='%1.1f%%', shadow=True, startangle=90)
     plt.title(
         f'[{title}] Amount of flagged/clean nodes in flagged graphs', fontsize=16)
-    plt.savefig(f'{output_path}/{title.split[0]}_flagged_pie.png')
+    plt.savefig(f'{output_path}/{title.split()[0]}_flagged_pie.png')
     plt.clf()
 
     # Graphs containing clean nodes
@@ -197,7 +225,7 @@ def generate_cluster_graphs(bl_df: pd.DataFrame, node_counts: np.array, bl_graph
     plt.pie(data, labels=labels, colors=colors,
             autopct='%1.1f%%', shadow=True, startangle=90)
     plt.title(f'[{title}] Graphs containing clean nodes', fontsize=16)
-    plt.savefig(f'{output_path}/{title.split[0]}_clean_pie.png')
+    plt.savefig(f'{output_path}/{title.split()[0]}_clean_pie.png')
     plt.clf()
 
 
