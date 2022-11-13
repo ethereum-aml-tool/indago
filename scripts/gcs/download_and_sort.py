@@ -36,7 +36,7 @@ while END_OFFSET < N_BLOBS + STEP_SIZE:
     print('\n[SORTING]')
     COLUMN_TO_SORT: int = 1
     SEC_COLUMN_TO_SORT: int = 2
-    CORES: int = os.cpu_count()
+    CORES: int | None = os.cpu_count()
     for file in tqdm(os.listdir(f'{DOWNLOAD_DIR}/{BQ_TABLE_NAME}')):
         path: str = f'{DOWNLOAD_DIR}/{BQ_TABLE_NAME}/{file}'
         if subprocess.call(f"tail -n+2 {path} | LC_ALL=C sort -t',' --parallel={CORES} -k {COLUMN_TO_SORT},{COLUMN_TO_SORT}n -k {SEC_COLUMN_TO_SORT},{SEC_COLUMN_TO_SORT}n > {DOWNLOAD_DIR}/{BQ_TABLE_NAME}/sorted-{file}", shell=True) != 0:

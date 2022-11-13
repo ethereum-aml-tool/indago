@@ -35,15 +35,12 @@ def build_response(
 
 
 def main(args: Any):
-    if args.dataset == 'bigquery':
-        loader: DataframeLoader = DataframeLoader(
-            args.blocks_csv,
-            args.known_addresses_csv,
-            args.save_dir,
-            args.transactions_csv,
-        )
-    else:
-        raise Exception(f'Dataset {args.dataset} not supported.')
+    loader: DataframeLoader = DataframeLoader(
+        args.blocks_csv,
+        args.known_addresses_csv,
+        args.save_dir,
+        args.transactions_csv,
+    )
 
     algo = DepositCluster(
         loader,
@@ -65,9 +62,6 @@ if __name__ == "__main__":
     parser.add_argument('transactions_csv', type=str, help='path to transaction data')
     parser.add_argument('known_addresses_csv', type=str, help='path to known address data')
     parser.add_argument('save_dir', type=str, help='path to save output')
-    parser.add_argument('--dataset', type=str, default='bigquery',
-                        choices=['mini_bionic', 'bigquery'], 
-                        help='dataset name (default: mini_bionic)')
     parser.add_argument('--a-max', type=float, default=0.01, 
                         help='maximum amount difference (default: 0.01)')
     parser.add_argument('--t-max', type=float, default=3200,
