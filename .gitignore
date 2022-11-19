@@ -28,3 +28,6 @@ experimental_notebooks/data/tornado.csv
 experimental_notebooks/results/fifo-rundata.csv
 experimental_notebooks/results/fifo-simple-result.csv
 experimental_notebooks/results/fifo-simple-rundata.csv
+
+.pdm.toml
+__pypackages__/

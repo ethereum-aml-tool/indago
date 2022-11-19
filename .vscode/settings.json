@@ -1,4 +1,10 @@
 {
-    "files.maxMemoryForLargeFilesMB": 8192,
-    "C_Cpp.intelliSenseMemoryLimit": 8192
+  "files.maxMemoryForLargeFilesMB": 8192,
+  "C_Cpp.intelliSenseMemoryLimit": 8192,
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}\\__pypackages__\\3.10\\lib"
+  ],
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}\\__pypackages__\\3.10\\lib"
+  ]
 }
