@@ -118,7 +118,7 @@ class Haircut(BaseBlacklist):
             chunk_counter += 1
             if chunk_counter % 1000 == 0 or chunk_counter == 1:
                 rows_processed = "{:,}".format(chunk_counter * chunk_size)
-                taints_above_x = taints[taints > 1e16] # 0.01 ETH
+                taints_above_x = pd.Series(taints).loc[lambda x: x > 10**16]  # 0.01 ETH
                 n_blacklisted = "{:,}".format(
                     len(taints_above_x) - (n_pretainted + countOf(taints.values(), 0)))
                 max_block = nonzero_traces.block_number.max()
