@@ -1,5 +1,5 @@
 ##!/bin/bash
-ALGORITHM="fifo-simple"
+ALGORITHM="haircut"
 OUTPUT_DIR="/data/blacklist"
 #OUTPUT_DIR="/media/ponbac/BigHDD/ethereum"
 BLOCKS_CSV="${OUTPUT_DIR}/blocks-sorted.csv"
@@ -35,11 +35,11 @@ fi
 echo "Running algorithm..."
 python3 scripts/run_blacklisting.py $ALGORITHM $BLOCKS_CSV $TRACES_CSV \
  $KNOWN_ADDRESSES_CSV $TORNADO_CSV $OUTPUT_DIR \
-  --only-tornado --start-block 9000000 --end-block 14700000
+ --only-tornado --start-block 9000000 --end-block 14700000
 
 echo "Uploading result..."
-gsutil -m cp ${OUTPUT_DIR}/${ALGORITHM}-result.csv gs://${BUCKET_NAME}/blacklisting/${ALGORITHM}-flagged-result.csv
-gsutil -m cp ${OUTPUT_DIR}/${ALGORITHM}-rundata.csv gs://${BUCKET_NAME}/blacklisting/${ALGORITHM}-flagged-rundata.csv
+gsutil -m cp ${OUTPUT_DIR}/${ALGORITHM}-result.csv gs://${BUCKET_NAME}/blacklisting/${ALGORITHM}-flagged-result-threshold.csv
+gsutil -m cp ${OUTPUT_DIR}/${ALGORITHM}-rundata.csv gs://${BUCKET_NAME}/blacklisting/${ALGORITHM}-flagged-rundata-threshold.csv
 
 echo "Done, removing algorithm files."
 rm -f ${OUTPUT_DIR}/${ALGORITHM}-result.csv

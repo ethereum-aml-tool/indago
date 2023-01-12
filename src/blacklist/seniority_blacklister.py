@@ -84,8 +84,10 @@ class Seniority(BaseBlacklist):
             chunk_counter += 1
             if chunk_counter % 1000 == 0 or chunk_counter == 1:
                 rows_processed = "{:,}".format(chunk_counter * chunk_size)
+                # find addresses with taint above 1e16
+                taints_above_x = pd.Series(blacklist).loc[lambda x: x > 10**16]
                 n_blacklisted = "{:,}".format(
-                    len(blacklist) - n_preblacklisted)
+                    len(taints_above_x) - n_preblacklisted)
                 max_block = nonzero_traces.block_number.max()
                 processed_after = (datetime.now() - start_time)
                 ram_usage = round(psutil.virtual_memory().used / (1000**3), 2)
