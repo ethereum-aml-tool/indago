@@ -1,17 +1,41 @@
 [project]
-name = ""
-version = ""
-description = ""
+name = "indago"
+version = "0.1.0"
+description = "Default template for PDM package"
 authors = [
     {name = "ponbac", email = "root@ponbac.xyz"},
 ]
-dependencies = ["fastapi", "pydantic", "uvicorn[standard]", "pandas==1.4.3", "numpy==1.23.1", "dask[complete]", "tqdm", "gcsfs", "fsspec", "psycopg2-binary", "sqlalchemy", "google-cloud-storage", "google-cloud-bigquery", "boto3[crt]", "jsonlines", "networkx", "matplotlib==3.5.2", "scipy", "igraph", "motor==3.0.0", "pymongo==4.2.0", "ijson", "ipython", "seaborn==0.12.0"]
-requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "pydantic",
+    "uvicorn[standard]",
+    "pandas==1.4.3",
+    "numpy==1.23.1",
+    "dask[complete]",
+    "tqdm",
+    "gcsfs",
+    "fsspec",
+    "psycopg2-binary",
+    "sqlalchemy",
+    "google-cloud-storage",
+    "google-cloud-bigquery",
+    "boto3[crt]",
+    "jsonlines",
+    "networkx",
+    "matplotlib==3.5.2",
+    "scipy",
+    "igraph",
+    "motor==3.0.0",
+    "pymongo==4.2.0",
+    "ijson",
+    "ipython",
+    "seaborn==0.12.0",
+    "ipykernel>=6.29.0",
+]
+requires-python = "==3.10.*"
 license = {text = "MIT"}
-
-[build-system]
-requires = ["pdm-pep517>=1.0.0"]
-build-backend = "pdm.pep517.api"
+readme = "README.md"
 
 [tool]
 [tool.pdm]
+distribution = false
