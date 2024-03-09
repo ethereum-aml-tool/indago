@@ -31,9 +31,9 @@ class EthereumBigQuery:
 
     def __init__(self, dataset_id: str = "bigquery-public-data.crypto_ethereum"):
         self.client: Client = Client()
-        assert (
-            len(os.environ["GOOGLE_APPLICATION_CREDENTIALS"]) > 0
-        ), "Set GOOGLE_APPLICATION_CREDENTIALS prior to use."
+        # assert (
+        #     len(os.environ["GOOGLE_APPLICATION_CREDENTIALS"]) > 0
+        # ), "Set GOOGLE_APPLICATION_CREDENTIALS prior to use."
         self.dataset_id: str = dataset_id
 
     def get_table_names(self) -> List[str]:

@@ -12,8 +12,8 @@ from utils.storage.base import EthereumStorage
 class GoogleCloudStorage(EthereumStorage):
     def __init__(self):
         self.client: Client = Client()
-        assert len(os.environ['GOOGLE_APPLICATION_CREDENTIALS']) > 0, \
-            "Set GOOGLE_APPLICATION_CREDENTIALS prior to use."
+        # assert len(os.environ['GOOGLE_APPLICATION_CREDENTIALS']) > 0, \
+        #     "Set GOOGLE_APPLICATION_CREDENTIALS prior to use."
 
     def empty_bucket(self, bucket: str) -> None:
         bucket: Bucket = self.client.get_bucket(bucket)

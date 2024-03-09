@@ -7,6 +7,7 @@ data/*.parquet
 data/transactions
 data/traces
 data/db
+data/raw/*
 notebooks/data
 /docker
 
