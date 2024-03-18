@@ -34,3 +34,4 @@ experimental_notebooks/results/fifo-simple-rundata.csv
 .pdm-python
 __pypackages__/
 target
+data/tmp
