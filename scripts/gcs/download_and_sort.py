@@ -39,13 +39,12 @@ DTYPES = {
     "status": int,
 }
 # 'None' = Download all blobs to local storage.
-# MAX_BLOBS: Optional[int] = None
-MAX_BLOBS: Optional[int] = 10
+MAX_BLOBS: Optional[int] = None
 
-STEP_SIZE: int = 50
+STEP_SIZE: int = 500
 START_OFFSET: int = 0  # 6000 #12000 #18000
 END_OFFSET: int = START_OFFSET + STEP_SIZE
-N_BLOBS: int = 10  # 12000 #18000 #23478
+N_BLOBS: int = 33252
 while END_OFFSET < N_BLOBS + STEP_SIZE:
     print("[DOWNLOADING]")
     storage: EthereumStorage = GoogleCloudStorage()
