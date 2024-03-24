@@ -100,10 +100,10 @@ N_BLOBS: int = 8000  # 16000 24000 33252
 #         print(f"ERROR: Failed to upload {BQ_TABLE_NAME}")
 #         sys.exit(1)
 
-# subprocess.call(
-#     ["gsutil", "-m", "cp", "-r", f"gs://{BUCKET_NAME}/pruned/", DOWNLOAD_DIR]
-# )
-# print(f"Downloaded {BQ_TABLE_NAME} to {DOWNLOAD_DIR}")
+subprocess.call(
+    ["gsutil", "-m", "cp", "-r", f"gs://{BUCKET_NAME}/pruned/", DOWNLOAD_DIR]
+)
+print(f"Downloaded {BQ_TABLE_NAME} to {DOWNLOAD_DIR}")
 
 # # Execute bash script to sort the downloaded files.
 print("\n[SORTING]")
