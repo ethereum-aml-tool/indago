@@ -17,8 +17,7 @@ assert (
 
 BQ_TABLE_NAME: str = "traces"
 BUCKET_NAME: str = f"indago"
-# DOWNLOAD_DIR: str = f"/data"
-DOWNLOAD_DIR: str = "/home/ponbac/dev/indago/data/raw"
+DOWNLOAD_DIR: str = "~/data"
 COLUMNS_TO_SAVE: Optional[List[str]] = [
     "block_number",
     "transaction_index",

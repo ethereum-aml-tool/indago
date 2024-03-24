@@ -1,7 +1,7 @@
 #!/bin/bash
-FOLDER_TO_SORT="/home/ponbac/dev/indago/data/raw/pruned/traces"
+FOLDER_TO_SORT="~/data/pruned/traces"
 BLOB_NAME="sorted-traces-"
-HEADER_FILE="/home/ponbac/dev/indago/data/raw/traces-header.csv"
+HEADER_FILE="~/indago/data/traces-header.csv"
 OUTPUT_FILE="traces-sorted.csv"
 CORES=8
 COLUMN_TO_SORT="1"
