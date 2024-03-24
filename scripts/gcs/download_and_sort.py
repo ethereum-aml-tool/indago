@@ -87,14 +87,14 @@ while END_OFFSET < N_BLOBS + STEP_SIZE:
                 "-m",
                 "cp",
                 "-r",
-                f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}",
+                expanded_path,
                 f"gs://{BUCKET_NAME}/pruned/",
             ]
         )
         == 0
     ):
         print(f"Uploaded pruned {BQ_TABLE_NAME}!")
-        rmtree(f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}")
+        rmtree(expanded_path)
         START_OFFSET += STEP_SIZE
         END_OFFSET += STEP_SIZE
     else:
