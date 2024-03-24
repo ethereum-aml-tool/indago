@@ -67,17 +67,17 @@ while END_OFFSET < N_BLOBS + STEP_SIZE:
     expanded_path: str = os.path.expanduser(f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}")
     print(f"Sorting {BQ_TABLE_NAME} files in {expanded_path}")
     for file in tqdm(os.listdir(expanded_path)):
-        path: str = os.path.join(expanded_path, file)
+        file_path: str = os.path.join(expanded_path, file)
         if (
             subprocess.call(
-                f"tail -n+2 {path} | LC_ALL=C sort -t',' --parallel={CORES} -k {COLUMN_TO_SORT},{COLUMN_TO_SORT}n -k {SEC_COLUMN_TO_SORT},{SEC_COLUMN_TO_SORT}n > {DOWNLOAD_DIR}/{BQ_TABLE_NAME}/sorted-{file}",
+                f"tail -n+2 {file_path} | LC_ALL=C sort -t',' --parallel={CORES} -k {COLUMN_TO_SORT},{COLUMN_TO_SORT}n -k {SEC_COLUMN_TO_SORT},{SEC_COLUMN_TO_SORT}n > {DOWNLOAD_DIR}/{BQ_TABLE_NAME}/sorted-{file}",
                 shell=True,
             )
             != 0
         ):
             print(f"ERROR: Failed to sort {file} {BQ_TABLE_NAME}")
             sys.exit(1)
-        os.remove(f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}/{file}")
+        os.remove(file_path)
 
     print("\n[UPLOADING]")
     if (
