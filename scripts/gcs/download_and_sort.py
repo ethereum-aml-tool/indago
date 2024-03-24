@@ -67,7 +67,7 @@ while END_OFFSET < N_BLOBS + STEP_SIZE:
     expanded_path: str = os.path.expanduser(f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}")
     print(f"Sorting {BQ_TABLE_NAME} files in {expanded_path}")
     for file in tqdm(os.listdir(expanded_path)):
-        path: str = f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}/{file}"
+        path: str = os.path.join(expanded_path, file)
         if (
             subprocess.call(
                 f"tail -n+2 {path} | LC_ALL=C sort -t',' --parallel={CORES} -k {COLUMN_TO_SORT},{COLUMN_TO_SORT}n -k {SEC_COLUMN_TO_SORT},{SEC_COLUMN_TO_SORT}n > {DOWNLOAD_DIR}/{BQ_TABLE_NAME}/sorted-{file}",
