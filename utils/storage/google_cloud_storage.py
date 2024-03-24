@@ -61,7 +61,6 @@ class GoogleCloudStorage(EthereumStorage):
             full_path = os.path.expanduser(
                 os.path.join(out_dir, blob.name.split("/")[-1])
             )
-            print(f"Downloading {blob.name} to {full_path}")
             blob.download_to_filename(full_path)
             if use_cols is not None:
                 pd.read_csv(

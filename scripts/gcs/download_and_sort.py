@@ -65,6 +65,7 @@ while END_OFFSET < N_BLOBS + STEP_SIZE:
     SEC_COLUMN_TO_SORT: int = 2
     CORES: int | None = os.cpu_count()
     expanded_path: str = os.path.expanduser(f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}")
+    print(f"Sorting {BQ_TABLE_NAME} files in {expanded_path}")
     for file in tqdm(os.listdir(expanded_path)):
         path: str = f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}/{file}"
         if (
