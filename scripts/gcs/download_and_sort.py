@@ -64,7 +64,8 @@ while END_OFFSET < N_BLOBS + STEP_SIZE:
     COLUMN_TO_SORT: int = 1
     SEC_COLUMN_TO_SORT: int = 2
     CORES: int | None = os.cpu_count()
-    for file in tqdm(os.listdir(f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}")):
+    expanded_path: str = os.path.expanduser(f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}")
+    for file in tqdm(os.listdir(expanded_path)):
         path: str = f"{DOWNLOAD_DIR}/{BQ_TABLE_NAME}/{file}"
         if (
             subprocess.call(
