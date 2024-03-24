@@ -61,6 +61,11 @@ class GoogleCloudStorage(EthereumStorage):
             full_path: str = os.path.join(out_dir, blob.name.split("/")[-1])
             print(f"Downloading {blob.name} to {full_path}")
             blob.download_to_filename(full_path)
+            # check if file at full_path exists
+            if os.path.isfile(full_path):
+                print(f"File {full_path} exists")
+            else:
+                print(f"File {full_path} does not exist")
             if use_cols is not None:
                 pd.read_csv(
                     full_path,
