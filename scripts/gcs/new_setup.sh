@@ -1,4 +1,5 @@
 mkdir data
+mkdir data/traces
 git clone https://github.com/ethereum-aml-tool/indago.git
 echo 'export PYTHONPATH=$PYTHONPATH:~/indago' >> ~/.bashrc
 source ~/.bashrc

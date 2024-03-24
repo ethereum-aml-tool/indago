@@ -17,7 +17,7 @@ assert (
 
 BQ_TABLE_NAME: str = "traces"
 BUCKET_NAME: str = f"indago"
-DOWNLOAD_DIR: str = "~/data"
+DOWNLOAD_DIR: str = os.path.expanduser("~/data")
 COLUMNS_TO_SAVE: Optional[List[str]] = [
     "block_number",
     "transaction_index",
