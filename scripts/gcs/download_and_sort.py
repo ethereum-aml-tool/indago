@@ -98,34 +98,34 @@ while END_OFFSET < N_BLOBS + STEP_SIZE:
         print(f"ERROR: Failed to upload {BQ_TABLE_NAME}")
         sys.exit(1)
 
-subprocess.call(
-    ["gsutil", "-m", "cp", "-r", f"gs://{BUCKET_NAME}/pruned/", DOWNLOAD_DIR]
-)
-print(f"Downloaded {BQ_TABLE_NAME} to {DOWNLOAD_DIR}")
+# subprocess.call(
+#     ["gsutil", "-m", "cp", "-r", f"gs://{BUCKET_NAME}/pruned/", DOWNLOAD_DIR]
+# )
+# print(f"Downloaded {BQ_TABLE_NAME} to {DOWNLOAD_DIR}")
 
-# # Execute bash script to sort the downloaded files.
-print("\n[SORTING]")
-if subprocess.call(["bash", "scripts/bash/sort_csv_transactions.sh"]) == 0:
-    print(f"Successfully sorted {BQ_TABLE_NAME}")
-else:
-    print(f"ERROR: Failed to sort {BQ_TABLE_NAME}")
-    sys.exit(1)
+# # # Execute bash script to sort the downloaded files.
+# print("\n[SORTING]")
+# if subprocess.call(["bash", "scripts/bash/sort_csv_transactions.sh"]) == 0:
+#     print(f"Successfully sorted {BQ_TABLE_NAME}")
+# else:
+#     print(f"ERROR: Failed to sort {BQ_TABLE_NAME}")
+#     sys.exit(1)
 
-print("\n[UPLOADING]")
-if (
-    subprocess.call(
-        [
-            "gsutil",
-            "-m",
-            "cp",
-            "-r",
-            f"{DOWNLOAD_DIR}/pruned/transactions/transactions-sorted.csv",
-            f"gs://{BUCKET_NAME}/sorted/",
-        ]
-    )
-    == 0
-):
-    print(f"Uploaded sorted {BQ_TABLE_NAME}!")
-else:
-    print(f"ERROR: Failed to upload {BQ_TABLE_NAME}")
-    sys.exit(1)
+# print("\n[UPLOADING]")
+# if (
+#     subprocess.call(
+#         [
+#             "gsutil",
+#             "-m",
+#             "cp",
+#             "-r",
+#             f"{DOWNLOAD_DIR}/pruned/transactions/transactions-sorted.csv",
+#             f"gs://{BUCKET_NAME}/sorted/",
+#         ]
+#     )
+#     == 0
+# ):
+#     print(f"Uploaded sorted {BQ_TABLE_NAME}!")
+# else:
+#     print(f"ERROR: Failed to upload {BQ_TABLE_NAME}")
+#     sys.exit(1)
