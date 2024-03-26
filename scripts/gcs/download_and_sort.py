@@ -21,30 +21,28 @@ DOWNLOAD_DIR: str = os.path.expanduser("~/data")
 COLUMNS_TO_SAVE: Optional[List[str]] = [
     "block_number",
     "transaction_index",
-    "trace_address",
+    "hash",
     "from_address",
     "to_address",
     "value",
-    "gas_used",
-    "status",
+    "block_timestamp",
 ]  # 'None' = Download all columns.
 DTYPES = {
     "block_number": int,
     "transaction_index": pd.Int32Dtype(),
+    "hash": str,
     "from_address": str,
     "to_address": str,
     "value": float,
-    "trace_address": str,
-    "gas_used": pd.Int32Dtype(),
-    "status": int,
+    "block_timestamp": "datetime64[ns]",
 }
 # 'None' = Download all blobs to local storage.
 MAX_BLOBS: Optional[int] = None
 
 STEP_SIZE: int = 250
-START_OFFSET: int = 0  # 8000 16000 24000
+START_OFFSET: int = 0  # 5000 10000
 END_OFFSET: int = START_OFFSET + STEP_SIZE
-N_BLOBS: int = 8000  # 16000 24000 33252
+N_BLOBS: int = 5000  # 10000 14257
 while END_OFFSET < N_BLOBS + STEP_SIZE:
     print("[DOWNLOADING]")
     storage: EthereumStorage = GoogleCloudStorage()
