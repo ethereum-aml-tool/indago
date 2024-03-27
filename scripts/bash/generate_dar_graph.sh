@@ -3,7 +3,7 @@ BLOCKS_CSV="/data/dar/blocks-sorted.csv"
 TRANSACTIONS_CSV="/data/dar/transactions-sorted.csv"
 KNOWN_ADDRESSES_CSV="/data/dar/known-addresses.csv"
 OUTPUT_DIR="/data/dar"
-BUCKET_NAME="eth-aml-data"
+BUCKET_NAME="indago"
 
 mkdir -p $OUTPUT_DIR
 
