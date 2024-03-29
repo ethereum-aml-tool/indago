@@ -5,35 +5,35 @@ KNOWN_ADDRESSES_CSV="/data/dar/known-addresses.csv"
 OUTPUT_DIR="/data/dar"
 BUCKET_NAME="indago"
 
-mkdir -p $OUTPUT_DIR
+# mkdir -p $OUTPUT_DIR
 
-echo "Downloading transaction data..."
-if test -f $KNOWN_ADDRESSES_CSV; then
-    echo "known-addresses.csv already exists, skipping download"
-else
-    gsutil -m cp gs://${BUCKET_NAME}/known-addresses.csv $OUTPUT_DIR
-fi
-if test -f $BLOCKS_CSV; then
-    echo "blocks-sorted.csv already exists, skipping download"
-else
-    gsutil -m cp gs://${BUCKET_NAME}/sorted/blocks-sorted.csv $OUTPUT_DIR
-fi
-if test -f $TRANSACTIONS_CSV; then
-    echo "transactions-sorted.csv already exists, skipping download"
-else
-    gsutil -m cp gs://${BUCKET_NAME}/sorted/transactions-sorted.csv $OUTPUT_DIR
-fi
+# echo "Downloading transaction data..."
+# if test -f $KNOWN_ADDRESSES_CSV; then
+#     echo "known-addresses.csv already exists, skipping download"
+# else
+#     gsutil -m cp gs://${BUCKET_NAME}/known-addresses.csv $OUTPUT_DIR
+# fi
+# if test -f $BLOCKS_CSV; then
+#     echo "blocks-sorted.csv already exists, skipping download"
+# else
+#     gsutil -m cp gs://${BUCKET_NAME}/sorted/blocks-sorted.csv $OUTPUT_DIR
+# fi
+# if test -f $TRANSACTIONS_CSV; then
+#     echo "transactions-sorted.csv already exists, skipping download"
+# else
+#     gsutil -m cp gs://${BUCKET_NAME}/sorted/transactions-sorted.csv $OUTPUT_DIR
+# fi
 
-# generate data.csv and metadata.csv
-echo "Generating data.csv and metadata.csv..."
-python3 scripts/run_deposit.py $BLOCKS_CSV $TRANSACTIONS_CSV $KNOWN_ADDRESSES_CSV $OUTPUT_DIR
+# # generate data.csv and metadata.csv
+# echo "Generating data.csv and metadata.csv..."
+# python3 scripts/run_deposit.py $BLOCKS_CSV $TRANSACTIONS_CSV $KNOWN_ADDRESSES_CSV $OUTPUT_DIR
 
-# prune data.csv and metadata.csv
-echo "Pruning data.csv and metadata.csv..."
-DATA_PRUNED_CSV=${OUTPUT_DIR}/data-pruned.csv
-METADATA_PRUNED_CSV=${OUTPUT_DIR}/metadata-pruned.csv
-python3 scripts/prune_data.py ${OUTPUT_DIR}/data.csv $DATA_PRUNED_CSV
-python3 scripts/prune_metadata.py ${OUTPUT_DIR}/metadata.csv $METADATA_PRUNED_CSV
+# # prune data.csv and metadata.csv
+# echo "Pruning data.csv and metadata.csv..."
+# DATA_PRUNED_CSV=${OUTPUT_DIR}/data-pruned.csv
+# METADATA_PRUNED_CSV=${OUTPUT_DIR}/metadata-pruned.csv
+# python3 scripts/prune_data.py ${OUTPUT_DIR}/data.csv $DATA_PRUNED_CSV
+# python3 scripts/prune_metadata.py ${OUTPUT_DIR}/metadata.csv $METADATA_PRUNED_CSV
 
 # generate graph
 echo "Generating graph..."

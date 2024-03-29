@@ -38,10 +38,10 @@ def main(args: Any):
     if not os.path.isdir(args.save_dir):
         os.makedirs(args.save_dir)
 
-    print('making user graph...',  end='', flush=True)
+    print("making user graph...", end="", flush=True)
     user_graph: ig.Graph = make_graph(data.user, data.deposit)
 
-    ''' NOTE: These should not be necessary in any of the current use cases. '''
+    """ NOTE: These should not be necessary in any of the current use cases. """
     # if args.gas_price_file:
     #     gas_price_sets: List[Set[str]] = from_json(args.gas_price_file)
     #     print('adding gas price nodes...', end = '', flush=True)
@@ -52,18 +52,26 @@ def main(args: Any):
     #     print('adding multi denom nodes...', end = '', flush=True)
     #     user_graph: nx.DiGraph = add_to_user_graph(user_graph, multi_denom_sets)
 
-    print('making exchange graph...',  end='', flush=True)
+    print("making exchange graph...", end="", flush=True)
     exchange_graph: ig.Graph = make_graph(data.deposit, data.exchange)
 
     # TODO: Make get_wcc() usage optional through flag.
-    print('making user wcc...',  end='', flush=True)
+    print("making user wcc...", end="", flush=True)
     # user_wccs: List[Set[str]] = get_wcc(user_graph)
     user_wccs, user_map = get_wcc_graphs(user_graph)
-    print('saving user wcc...',  end='', flush=True)
-    to_json(user_wccs, os.path.join(args.save_dir, 'user_clusters.json'),
-            line_delimited=False, with_pandas=True)
-    to_json(user_map, os.path.join(args.save_dir, 'user_clusters_map.json'),
-            line_delimited=False, with_pandas=True)
+    print("saving user wcc...", end="", flush=True)
+    to_json(
+        user_wccs,
+        os.path.join(args.save_dir, "user_clusters.json"),
+        line_delimited=False,
+        with_pandas=True,
+    )
+    to_json(
+        user_map,
+        os.path.join(args.save_dir, "user_clusters_map.json"),
+        line_delimited=False,
+        with_pandas=True,
+    )
     del user_wccs, user_map
 
     # algorithm 1 line 13
@@ -73,14 +81,22 @@ def main(args: Any):
     #     set(store.deposit.to_numpy().tolist()),
     # )
 
-    print('making exchange wcc...',  end='', flush=True)
+    print("making exchange wcc...", end="", flush=True)
     # exchange_wccs: List[Set[str]] = get_wcc(exchange_graph)
     exchange_wccs, exchange_map = get_wcc_graphs(exchange_graph)
-    print('saving exchange wcc...',  end='', flush=True)
-    to_json(exchange_wccs, os.path.join(args.save_dir,
-            'exchange_clusters.json'), line_delimited=False, with_pandas=True)
-    to_json(exchange_map, os.path.join(args.save_dir,
-            'exchange_clusters_map.json'), line_delimited=False, with_pandas=True)
+    print("saving exchange wcc...", end="", flush=True)
+    to_json(
+        exchange_wccs,
+        os.path.join(args.save_dir, "exchange_clusters.json"),
+        line_delimited=False,
+        with_pandas=True,
+    )
+    to_json(
+        exchange_map,
+        os.path.join(args.save_dir, "exchange_clusters_map.json"),
+        line_delimited=False,
+        with_pandas=True,
+    )
     del exchange_wccs, exchange_map
 
     # # prune trivial clusters
@@ -99,8 +115,8 @@ def add_to_user_graph(graph: nx.DiGraph, clusters: List[Set[str]]):
 
 
 def get_wcc(graph: ig.Graph) -> List[Set[str]]:
-    clusters: ig.VertexClustering = graph.clusters(mode='weak')
-    addresses = clusters.graph.vs['name']
+    clusters: ig.VertexClustering = graph.clusters(mode="weak")
+    addresses = clusters.graph.vs["name"]
 
     cluster_sets: List[Set[str]] = []
     for c in clusters:
@@ -112,14 +128,16 @@ def get_wcc(graph: ig.Graph) -> List[Set[str]]:
     return cluster_sets
 
 
-def get_wcc_graphs(graph: ig.Graph) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    '''
+def get_wcc_graphs(
+    graph: ig.Graph,
+) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
     get_wcc() but also returns information about the edges
     and a mapping between addresses and their cluster.
 
     Can be used to construct accurate subgraphs.
-    '''
-    clusters: ig.VertexClustering = graph.clusters(mode='weak')
+    """
+    clusters: ig.VertexClustering = graph.clusters(mode="weak")
     graph_dicts: List[Dict[str, Any]] = []
     address_map: List[Dict[str, Any]] = []
     for subgraph in tqdm(clusters.subgraphs()):
@@ -127,35 +145,35 @@ def get_wcc_graphs(graph: ig.Graph) -> tuple[List[Dict[str, Any]], List[Dict[str
         if subgraph.ecount() <= 1 or subgraph.vcount() <= 2:
             continue
         if subgraph.vcount() > 1000000:
-            print(f'{len(subgraph.vs)} nodes in big subgraph')
+            print(f"{len(subgraph.vs)} nodes in big subgraph")
             continue
         db_id = len(graph_dicts)
-        graph_dict = {'_id': db_id, 'nodes': [], 'edges': []}
+        graph_dict = {"_id": db_id, "nodes": [], "edges": []}
         for node in subgraph.vs:
-            address = node['name']
-            map_dict = {'_id': address, 'cluster_id': db_id}
+            address = node["name"]
+            map_dict = {"_id": address, "cluster_id": db_id}
             address_map.append(map_dict)
-            graph_dict['nodes'].append(address)
+            graph_dict["nodes"].append(address)
         unique_edges = remove_duplicate_edges(subgraph.es)
         for edge in unique_edges:
-            graph_dict['edges'].append([edge.source, edge.target])
+            graph_dict["edges"].append([edge.source, edge.target])
         graph_dicts.append(graph_dict)
 
     return graph_dicts, address_map
 
 
 def remove_duplicate_edges(edges):
-    '''
+    """
     Remove duplicate edges from a list of edges.
     Only takes source and target into account.
-    '''
+    """
     unique_edges = []
     unique_values = {}
     for edge in edges:
         from_to = f"{edge.source}-{edge.target}"
         if from_to not in unique_values:
             unique_edges.append(edge)
-            unique_values[f'{from_to}'] = True
+            unique_values[f"{from_to}"] = True
 
     return unique_edges
 
@@ -182,16 +200,19 @@ def make_graph(node_a: pd.Series, node_b: pd.Series) -> ig.Graph:
     """
     assert node_a.size == node_b.size, "Dataframes are uneven sizes."
     unique_a: pd.DataFrame = pd.DataFrame()
-    unique_a['address'] = node_a.unique()
+    unique_a["address"] = node_a.unique()
     unique_b: pd.DataFrame = pd.DataFrame()
-    unique_b['address'] = node_b.unique()
+    unique_b["address"] = node_b.unique()
 
     vertices: pd.DataFrame = pd.concat([unique_a, unique_b], axis=0)
-    vertices.rename(columns={0: 'address'}, inplace=True)
+    vertices.rename(columns={0: "address"}, inplace=True)
     edges: pd.DataFrame = pd.concat([node_a, node_b], axis=1)
 
-    graph: ig.Graph = ig.Graph.DataFrame(
-        edges, directed=True, vertices=vertices)
+    # TypeError: Source and target IDs must be 0-based integers, found types [dtype('O'), dtype('O')]
+    vertices["id"] = vertices["address"].astype("category").cat.codes
+    edges["from"] = node_a.astype("category").cat.codes
+    edges["to"] = node_b.astype("category").cat.codes
+    graph: ig.Graph = ig.Graph.DataFrame(edges, directed=True, vertices=vertices)
 
     return graph
 
@@ -200,9 +221,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('data_file', type=str,
-                        help='path to cached out of deposit.py')
-    parser.add_argument('save_dir', type=str, help='where to save files.')
+    parser.add_argument("data_file", type=str, help="path to cached out of deposit.py")
+    parser.add_argument("save_dir", type=str, help="where to save files.")
     # parser.add_argument('--gas_price_file', default=None,
     #                     type=str, help='path to gas price address sets')
     # parser.add_argument('--multi_denom_file', default=None,
