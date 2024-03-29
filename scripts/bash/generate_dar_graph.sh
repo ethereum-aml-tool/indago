@@ -30,8 +30,8 @@ BUCKET_NAME="indago"
 
 # # prune data.csv and metadata.csv
 # echo "Pruning data.csv and metadata.csv..."
-# DATA_PRUNED_CSV=${OUTPUT_DIR}/data-pruned.csv
-# METADATA_PRUNED_CSV=${OUTPUT_DIR}/metadata-pruned.csv
+DATA_PRUNED_CSV=${OUTPUT_DIR}/data-pruned.csv
+METADATA_PRUNED_CSV=${OUTPUT_DIR}/metadata-pruned.csv
 # python3 scripts/prune_data.py ${OUTPUT_DIR}/data.csv $DATA_PRUNED_CSV
 # python3 scripts/prune_metadata.py ${OUTPUT_DIR}/metadata.csv $METADATA_PRUNED_CSV
 
