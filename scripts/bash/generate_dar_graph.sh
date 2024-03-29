@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 BLOCKS_CSV="/data/dar/blocks-sorted.csv"
 TRANSACTIONS_CSV="/data/dar/transactions-sorted.csv"
 KNOWN_ADDRESSES_CSV="/data/dar/known-addresses.csv"

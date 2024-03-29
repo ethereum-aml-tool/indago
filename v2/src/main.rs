@@ -1,13 +1,11 @@
 use anyhow::Result;
-use fxhash::FxHashSet as HashSet;
-use polars::datatypes::DataType;
-use polars::lazy::dsl::col;
-use polars::lazy::frame::{LazyCsvReader, LazyFileListReader, LazyFrame};
-use polars::prelude::Schema;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::{BufRead, BufReader, Write};
-use std::sync::Arc;
+use std::io::Write;
+
+use crate::data_loader::DataLoader;
+
+mod data_loader;
 
 #[derive(Serialize, Deserialize)]
 struct RunData {
@@ -27,22 +25,26 @@ struct RunData {
 // 0x8ab7404063ec4dbcfd4598215992dc3f8ec853d7, Akropolis (AKRO),contract,defi,1,defi
 // 0x1c74cff0376fb4031cd7492cd6db2d66c3f2c6b9, bZx Protocol Token (BZRX),contract,defi,1,token contract
 
-fn main() -> Result<()> {
-    let blacklist_content = fs::read_to_string("../data/known-addresses.csv")?;
-    let mut blacklisted_addresses: HashSet<String> = blacklist_content
-        .lines()
-        .filter(|line| line.split(',').nth(4).unwrap() == "0")
-        .map(|line| line.split(',').next().unwrap().to_string())
-        .collect();
+const TRACES_CSV: &str = "../data/raw/traces/traces-sorted.csv";
+const KNOWN_ADDRESSES_CSV: &str = "../data/known-addresses.csv";
+const TORNADO_CSV: &str = "../data/tornado.csv";
+const OUTPUT_CSV: &str = "../data/tmp/blacklisted-addresses.txt";
 
+fn main() -> Result<()> {
+    let data_loader = DataLoader::new(
+        KNOWN_ADDRESSES_CSV.to_string(),
+        TORNADO_CSV.to_string(),
+        TRACES_CSV.to_string(),
+        OUTPUT_CSV.to_string(),
+    );
+
+    let mut blacklisted_addresses = data_loader.load_known_addresses();
     println!(
         "Initially blacklisted addresses: {}",
         blacklisted_addresses.len()
     );
 
-    let file = fs::File::open("../data/raw/traces/traces-sorted.csv")?;
-    let reader = BufReader::with_capacity(4096, file);
-    for line in reader.lines() {
+    for line in data_loader.traces_iter() {
         let line = line?;
         let parts: Vec<&str> = line.split(',').collect();
         if (parts[7] == "0") || (parts[5] == "0") {
@@ -64,38 +66,4 @@ fn main() -> Result<()> {
     }
 
     Ok(())
-}
-
-fn with_polars() -> Result<HashSet<String>> {
-    let blacklist_content = fs::read_to_string("../data/known-addresses.csv")?;
-    let mut blacklisted_addresses: HashSet<String> = blacklist_content
-        .lines()
-        .filter(|line| line.split(',').nth(4).unwrap() == "0")
-        .map(|line| line.split(',').next().unwrap().to_string())
-        .collect();
-
-    let mut schema = Schema::new();
-    schema.with_column("value".into(), DataType::Decimal(None, None));
-
-    let df = LazyCsvReader::new("../data/raw/traces/traces-sorted.csv")
-        .has_header(true)
-        .with_dtype_overwrite(Some(&schema))
-        .finish()?;
-
-    let valid_rows = df
-        .filter(col("status").eq(1))
-        .filter(col("value").gt(0))
-        .collect()?;
-
-    for row in valid_rows.iter() {
-        let from_address = row.get(3).unwrap().to_string();
-        let to_address = row.get(4).unwrap().to_string();
-        if blacklisted_addresses.contains(&from_address) {
-            blacklisted_addresses.insert(to_address);
-        }
-    }
-
-    println!("Blacklisted addresses: {}", blacklisted_addresses.len());
-
-    Ok(blacklisted_addresses)
 }
