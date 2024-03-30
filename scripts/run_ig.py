@@ -208,11 +208,23 @@ def make_graph(node_a: pd.Series, node_b: pd.Series) -> ig.Graph:
     vertices.rename(columns={0: "address"}, inplace=True)
     edges: pd.DataFrame = pd.concat([node_a, node_b], axis=1)
 
+    # Print DTypes of vertices and edges
+    print("Vertices:")
+    print(vertices.dtypes)
+    print(vertices.head())
+    print("\nEdges:")
+    print(edges.dtypes)
+    print(edges.head())
+
     # TypeError: Source and target IDs must be 0-based integers, found types [dtype('O'), dtype('O')]
-    vertices["id"] = vertices["address"].astype("category").cat.codes
-    edges["from"] = node_a.astype("category").cat.codes
-    edges["to"] = node_b.astype("category").cat.codes
-    graph: ig.Graph = ig.Graph.DataFrame(edges, directed=True, vertices=vertices)
+    # vertices["address"] = vertices["address"].astype(str)
+    # edges["user"] = edges["user"].astype(str)
+    # edges["deposit"] = edges["deposit"].astype(str)
+    # print(vertices.dtypes)
+    # print(edges.dtypes)
+    graph: ig.Graph = ig.Graph.DataFrame(
+        edges, directed=True, vertices=vertices, use_vids=False
+    )
 
     return graph
 
