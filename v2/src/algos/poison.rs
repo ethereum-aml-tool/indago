@@ -3,7 +3,7 @@ use std::io::Write;
 
 use crate::{
     data_loader::{DataLoader, TraceColumn},
-    run_data::RunData,
+    run_data::{save_run_data, RunData},
     BlacklistingAlgorithm, Dataset,
 };
 use anyhow::Result;
@@ -18,8 +18,8 @@ impl BlacklistingAlgorithm for Poison {
         data_loader: &DataLoader,
         dataset: Dataset,
         n_between_stats: usize,
-    ) -> Result<Vec<RunData>> {
-        let mut blacklisted_addresses = data_loader.load_dataset(dataset);
+    ) -> Result<()> {
+        let mut blacklisted_addresses = data_loader.load_dataset(&dataset);
 
         println!(
             "Initially blacklisted addresses: {}",
@@ -59,22 +59,31 @@ impl BlacklistingAlgorithm for Poison {
                 ));
             }
         }
-
-        println!(
-            "Blacklisted addresses: {}",
-            blacklisted_addresses.len().separate_with_commas()
-        );
-        println!("Processed {} rows", n_processed.separate_with_commas());
+        // final run data
+        run_data.push(RunData::new(
+            &mut system,
+            n_processed,
+            blacklisted_addresses.len(),
+            start_time.elapsed(),
+        ));
 
         // Save the blacklisted addresses to a txt file
         let mut file = fs::File::create(format!(
-            "{}/blacklisted-addresses.txt",
-            data_loader.output_dir
+            "{}/poison-addresses-{}.txt",
+            data_loader.output_dir,
+            dataset.to_str()
         ))?;
         for address in blacklisted_addresses.iter() {
             writeln!(file, "{}", address)?;
         }
+        // Save run data to a csv file
+        let run_data_path = format!(
+            "{}/poison-rundata-{}.csv",
+            data_loader.output_dir,
+            dataset.to_str()
+        );
+        save_run_data(run_data, run_data_path.as_str())?;
 
-        Ok(run_data)
+        Ok(())
     }
 }

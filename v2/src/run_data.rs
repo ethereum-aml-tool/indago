@@ -1,6 +1,8 @@
 use anyhow::Result;
+use std::fmt;
 use std::io::Write;
 use std::{fs, time::Duration};
+use thousands::Separable;
 
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
@@ -23,12 +25,28 @@ impl RunData {
         system.refresh_memory();
         let ram_usage_gb = system.used_memory() as f32 / 1024.0 / 1024.0 / 1024.0;
 
-        Self {
+        let rundata = Self {
             rows_processed,
             n_blacklisted,
             processed_after,
             ram_usage_gb,
-        }
+        };
+        println!("\n{}", rundata);
+
+        rundata
+    }
+}
+
+impl fmt::Display for RunData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Rows processed: {}\nBlacklisted addresses: {}\nProcessed after: {:.2} minutes\nRAM usage: {:.2} GB",
+            self.rows_processed.separate_with_commas(),
+            self.n_blacklisted.separate_with_commas(),
+            self.processed_after.as_secs_f32() / 60.0,
+            self.ram_usage_gb
+        )
     }
 }
 

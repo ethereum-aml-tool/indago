@@ -16,10 +16,10 @@ mod run_data;
 // 0x8ab7404063ec4dbcfd4598215992dc3f8ec853d7, Akropolis (AKRO),contract,defi,1,defi
 // 0x1c74cff0376fb4031cd7492cd6db2d66c3f2c6b9, bZx Protocol Token (BZRX),contract,defi,1,token contract
 
-const TRACES_CSV: &str = "../data/raw/traces-sorted.csv";
-const KNOWN_ADDRESSES_CSV: &str = "../data/known-addresses.csv";
-const TORNADO_CSV: &str = "../data/tornado.csv";
-const OUTPUT_DIR: &str = "../data/tmp";
+const OUTPUT_DIR: &str = "/data/blacklist";
+const TRACES_CSV: &str = "/data/blacklist/traces-sorted.csv";
+const KNOWN_ADDRESSES_CSV: &str = "/data/blacklist/known-addresses.csv";
+const TORNADO_CSV: &str = "/data/blacklist/tornado.csv";
 
 enum Dataset {
     Tornado,
@@ -27,13 +27,19 @@ enum Dataset {
     Combined,
 }
 
+impl Dataset {
+    fn to_str(&self) -> &str {
+        match self {
+            Dataset::Tornado => "tornado",
+            Dataset::KnownAddresses => "known_addresses",
+            Dataset::Combined => "combined",
+        }
+    }
+}
+
 trait BlacklistingAlgorithm {
-    fn run(
-        &self,
-        data_loader: &DataLoader,
-        dataset: Dataset,
-        n_between_stats: usize,
-    ) -> Result<Vec<RunData>>;
+    fn run(&self, data_loader: &DataLoader, dataset: Dataset, n_between_stats: usize)
+        -> Result<()>;
 }
 
 fn main() -> Result<()> {
@@ -44,12 +50,10 @@ fn main() -> Result<()> {
         OUTPUT_DIR.to_string(),
     );
 
-    // let poison = Poison {};
-    // let poison_rundata = poison.run(&data_loader, Dataset::Combined, 100_000)?;
-    // save_run_data(
-    //     poison_rundata,
-    //     format!("{}/poison-rundata.csv", OUTPUT_DIR).as_str(),
-    // )?;
+    let poison = Poison {};
+    poison.run(&data_loader, Dataset::Combined, 100_000)?;
+    poison.run(&data_loader, Dataset::KnownAddresses, 100_000)?;
+    poison.run(&data_loader, Dataset::Tornado, 100_000)?;
 
     println!(
         "\nNumber of unique addresses: {}",

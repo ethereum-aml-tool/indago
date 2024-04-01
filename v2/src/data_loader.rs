@@ -81,7 +81,7 @@ impl DataLoader {
             .collect()
     }
 
-    pub fn load_dataset(&self, dataset: Dataset) -> HashSet<String> {
+    pub fn load_dataset(&self, dataset: &Dataset) -> HashSet<String> {
         match dataset {
             Dataset::KnownAddresses => self.load_known_addresses(),
             Dataset::Tornado => self.load_tornado_addresses(),
@@ -95,7 +95,7 @@ impl DataLoader {
 
     pub fn traces_iter(&self) -> Lines<BufReader<File>> {
         let file = fs::File::open(&self.traces_csv).unwrap();
-        let reader = BufReader::with_capacity(4096, file);
+        let reader = BufReader::with_capacity(8192, file);
         reader.lines()
     }
 
