@@ -1,3 +1,5 @@
+mod haircut;
 mod poison;
 
-pub use poison::*;
+pub use haircut::Haircut;
+pub use poison::Poison;
