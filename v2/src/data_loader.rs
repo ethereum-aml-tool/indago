@@ -144,21 +144,20 @@ impl DataLoader {
                         .peek()
                         .map_or(false, |next_part| !next_part.starts_with("0x"))
                     {
-                        parts.next(); // Skip over continued parts of `trace_address`
+                        parts.next(); // skip over continued parts of `trace_address`
                     }
                     current_column += 1;
                     continue;
+                } else if current_column == TraceColumn::FromAddress as usize {
+                    write!(file, "{},", part).unwrap();
+                    // write all the remaining parts
+                    let remaining_parts = parts.collect::<Vec<&str>>().join(",");
+                    writeln!(file, "{}", remaining_parts).unwrap();
+                    break;
                 }
 
-                write!(file, "{}", part).unwrap();
-                if current_column < TraceColumn::Status as usize {
-                    write!(file, ",").unwrap();
-                }
-
+                write!(file, "{},", part).unwrap();
                 current_column += 1;
-                if current_column > TraceColumn::Status as usize {
-                    writeln!(file).unwrap();
-                }
             }
         }
     }
