@@ -1,4 +1,5 @@
 use fxhash::FxHashSet as HashSet;
+use std::io::Write;
 use std::{
     fs::{self, File},
     io::{BufRead, BufReader, Lines},
@@ -117,5 +118,68 @@ impl DataLoader {
         }
 
         addresses.len()
+    }
+
+    // have to handle that trace address can be empty, in quotes and contain commas
+    // ,
+    // "0,1,2",
+    // 2,
+    pub fn remove_trace_address_column(&self) {
+        let output_file = format!("{}/traces_no_trace_address.csv", self.output_dir);
+        let mut file = File::create(output_file).unwrap();
+
+        writeln!(
+            file,
+            "block_number,transaction_index,from_address,to_address,value,gas_used,status"
+        )
+        .unwrap();
+        for line in self.traces_iter().skip(1) {
+            let line = line.unwrap();
+
+            let mut current_column = 0;
+            let mut parts = line.split(',').peekable();
+            while let Some(part) = parts.next() {
+                if current_column == TraceColumn::TraceAddress as usize {
+                    while parts
+                        .peek()
+                        .map_or(false, |next_part| !next_part.starts_with("0x"))
+                    {
+                        parts.next(); // Skip over continued parts of `trace_address`
+                    }
+                }
+
+                write!(file, "{}", part).unwrap();
+                if current_column < TraceColumn::Status as usize {
+                    write!(file, ",").unwrap();
+                }
+
+                current_column += 1;
+                if current_column > TraceColumn::Status as usize {
+                    writeln!(file).unwrap();
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const OUTPUT_DIR: &str = "/home/ponbac/dev/indago/data/tmp";
+    const TRACES_CSV: &str = "/home/ponbac/dev/indago/data/raw/test-traces.csv";
+    const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
+    const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";
+
+    #[test]
+    fn remove_trace_address_column() {
+        let data_loader = DataLoader::new(
+            KNOWN_ADDRESSES_CSV.to_string(),
+            TORNADO_CSV.to_string(),
+            TRACES_CSV.to_string(),
+            OUTPUT_DIR.to_string(),
+        );
+
+        data_loader.remove_trace_address_column();
     }
 }
