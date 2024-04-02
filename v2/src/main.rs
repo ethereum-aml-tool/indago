@@ -54,17 +54,17 @@ fn main() -> Result<()> {
         OUTPUT_DIR.to_string(),
     );
 
-    data_loader.remove_trace_address_column();
+    // data_loader.remove_trace_address_column();
 
-    // let poison = Poison {};
-    // poison.run(&data_loader, Dataset::Combined, 100_000)?;
-    // poison.run(&data_loader, Dataset::KnownAddresses, 100_000)?;
-    // poison.run(&data_loader, Dataset::Tornado, 100_000)?;
+    let poison = Poison {};
+    poison.run(&data_loader, Dataset::Combined, 1_000_000)?;
+    poison.run(&data_loader, Dataset::KnownAddresses, 1_000_000)?;
+    poison.run(&data_loader, Dataset::Tornado, 1_000_000)?;
 
-    // println!(
-    //     "\nNumber of unique addresses: {}",
-    //     data_loader.n_unique_addresses().separate_with_commas()
-    // );
+    println!(
+        "\nNumber of unique addresses: {}",
+        data_loader.n_unique_addresses().separate_with_commas()
+    );
 
     // let haircut = Haircut {};
     // haircut.run(&data_loader, Dataset::Tornado, 100_000)?;

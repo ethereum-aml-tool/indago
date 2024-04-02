@@ -35,6 +35,11 @@ impl BlacklistingAlgorithm for Poison {
             let line = line?;
             let parts: Vec<&str> = line.split(',').collect();
 
+            let is_miner_reward = parts.len() < 7;
+            if is_miner_reward {
+                continue;
+            }
+
             let status = TraceColumn::Status.extract_from_parts(&parts);
             let value = TraceColumn::Value.extract_from_parts(&parts);
             // if (status == "0") || value == "0" || whitelist.contains(from_address) {

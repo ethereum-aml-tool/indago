@@ -11,17 +11,21 @@ use crate::Dataset;
 pub enum TraceColumn {
     BlockNumber = 0,
     TransactionIndex = 1,
-    TraceAddress = 2,
-    FromAddress = 3,
-    ToAddress = 4,
-    Value = 5,
-    GasUsed = 6,
-    Status = 7,
+    FromAddress = 2,
+    ToAddress = 3,
+    Value = 4,
+    GasUsed = 5,
+    Status = 6,
 }
 
 impl TraceColumn {
     pub fn extract_from_parts<'a>(&'a self, line_parts: &[&'a str]) -> &str {
-        line_parts[*self as usize]
+        return line_parts.get(*self as usize).unwrap_or_else(|| {
+            panic!(
+                "Could not extract column {} from line parts: {:?}",
+                *self as usize, line_parts
+            )
+        });
     }
 }
 
@@ -124,74 +128,52 @@ impl DataLoader {
     // ,
     // "0,1,2",
     // 2,
-    pub fn remove_trace_address_column(&self) {
-        let output_file = format!("{}/traces_no_trace_address.csv", self.output_dir);
-        let mut file = File::create(output_file).unwrap();
+    // pub fn remove_trace_address_column(&self) {
+    //     let output_file = format!("{}/traces_no_trace_address.csv", self.output_dir);
+    //     let mut file = File::create(output_file).unwrap();
 
-        let mut lines_to_write = Vec::new();
-        lines_to_write.push(
-            "block_number,transaction_index,from_address,to_address,value,gas_used,status"
-                .to_string(),
-        );
+    //     let mut lines_to_write = Vec::new();
+    //     lines_to_write.push(
+    //         "block_number,transaction_index,from_address,to_address,value,gas_used,status"
+    //             .to_string(),
+    //     );
 
-        for line in self.traces_iter().skip(1) {
-            if lines_to_write.len() % 1_000_000 == 0 {
-                writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
-                lines_to_write.clear();
-            }
+    //     for line in self.traces_iter().skip(1) {
+    //         if lines_to_write.len() % 1_000_000 == 0 {
+    //             writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
+    //             lines_to_write.clear();
+    //         }
 
-            let line = line.unwrap();
+    //         let line = line.unwrap();
 
-            let mut current_column = 0;
-            let mut parts = line.split(',').peekable();
-            let mut new_line = String::new();
-            while let Some(part) = parts.next() {
-                if current_column == TraceColumn::TraceAddress as usize {
-                    while parts
-                        .peek()
-                        .map_or(false, |next_part| !next_part.starts_with("0x"))
-                    {
-                        parts.next(); // skip over continued parts of `trace_address`
-                    }
-                    current_column += 1;
-                    continue;
-                } else if current_column == TraceColumn::FromAddress as usize {
-                    // write all the remaining parts
-                    let remaining_parts =
-                        format!("{},{}", part, parts.collect::<Vec<&str>>().join(","));
-                    new_line.push_str(&remaining_parts);
-                    break;
-                }
+    //         let mut current_column = 0;
+    //         let mut parts = line.split(',').peekable();
+    //         let mut new_line = String::new();
+    //         while let Some(part) = parts.next() {
+    //             if current_column == TraceColumn::TraceAddress as usize {
+    //                 while parts
+    //                     .peek()
+    //                     .map_or(false, |next_part| !next_part.starts_with("0x"))
+    //                 {
+    //                     parts.next(); // skip over continued parts of `trace_address`
+    //                 }
+    //                 current_column += 1;
+    //                 continue;
+    //             } else if current_column == TraceColumn::FromAddress as usize {
+    //                 // write all the remaining parts
+    //                 let remaining_parts =
+    //                     format!("{},{}", part, parts.collect::<Vec<&str>>().join(","));
+    //                 new_line.push_str(&remaining_parts);
+    //                 break;
+    //             }
 
-                new_line.push_str(&format!("{},", part));
-                current_column += 1;
-            }
+    //             new_line.push_str(&format!("{},", part));
+    //             current_column += 1;
+    //         }
 
-            lines_to_write.push(new_line);
-        }
+    //         lines_to_write.push(new_line);
+    //     }
 
-        writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    const OUTPUT_DIR: &str = "/home/ponbac/dev/indago/data/tmp";
-    const TRACES_CSV: &str = "/home/ponbac/dev/indago/data/raw/test-traces.csv";
-    const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
-    const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";
-
-    #[test]
-    fn remove_trace_address_column() {
-        let data_loader = DataLoader::new(
-            KNOWN_ADDRESSES_CSV.to_string(),
-            TORNADO_CSV.to_string(),
-            TRACES_CSV.to_string(),
-            OUTPUT_DIR.to_string(),
-        );
-
-        data_loader.remove_trace_address_column();
-    }
+    //     writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
+    // }
 }
