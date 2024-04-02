@@ -128,16 +128,23 @@ impl DataLoader {
         let output_file = format!("{}/traces_no_trace_address.csv", self.output_dir);
         let mut file = File::create(output_file).unwrap();
 
-        writeln!(
-            file,
+        let mut lines_to_write = Vec::new();
+        lines_to_write.push(
             "block_number,transaction_index,from_address,to_address,value,gas_used,status"
-        )
-        .unwrap();
+                .to_string(),
+        );
+
         for line in self.traces_iter().skip(1) {
+            if lines_to_write.len() % 1_000_000 == 0 {
+                writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
+                lines_to_write.clear();
+            }
+
             let line = line.unwrap();
 
             let mut current_column = 0;
             let mut parts = line.split(',').peekable();
+            let mut new_line = String::new();
             while let Some(part) = parts.next() {
                 if current_column == TraceColumn::TraceAddress as usize {
                     while parts
@@ -152,14 +159,18 @@ impl DataLoader {
                     // write all the remaining parts
                     let remaining_parts =
                         format!("{},{}", part, parts.collect::<Vec<&str>>().join(","));
-                    writeln!(file, "{}", remaining_parts).unwrap();
+                    new_line.push_str(&remaining_parts);
                     break;
                 }
 
-                write!(file, "{},", part).unwrap();
+                new_line.push_str(&format!("{},", part));
                 current_column += 1;
             }
+
+            lines_to_write.push(new_line);
         }
+
+        writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
     }
 }
 
