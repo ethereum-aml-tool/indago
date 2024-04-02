@@ -146,6 +146,8 @@ impl DataLoader {
                     {
                         parts.next(); // Skip over continued parts of `trace_address`
                     }
+                    current_column += 1;
+                    continue;
                 }
 
                 write!(file, "{}", part).unwrap();

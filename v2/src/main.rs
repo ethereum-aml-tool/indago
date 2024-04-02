@@ -15,15 +15,15 @@ mod run_data;
 // 0x8ab7404063ec4dbcfd4598215992dc3f8ec853d7, Akropolis (AKRO),contract,defi,1,defi
 // 0x1c74cff0376fb4031cd7492cd6db2d66c3f2c6b9, bZx Protocol Token (BZRX),contract,defi,1,token contract
 
-// const OUTPUT_DIR: &str = "/data/blacklist";
-// const TRACES_CSV: &str = "/data/blacklist/traces-sorted.csv";
-// const KNOWN_ADDRESSES_CSV: &str = "/data/blacklist/known-addresses.csv";
-// const TORNADO_CSV: &str = "/data/blacklist/tornado.csv";
+const OUTPUT_DIR: &str = "/data/blacklist";
+const TRACES_CSV: &str = "/data/blacklist/traces-sorted.csv";
+const KNOWN_ADDRESSES_CSV: &str = "/data/blacklist/known-addresses.csv";
+const TORNADO_CSV: &str = "/data/blacklist/tornado.csv";
 
-const OUTPUT_DIR: &str = "/home/ponbac/dev/indago/data/tmp";
-const TRACES_CSV: &str = "/home/ponbac/dev/indago/data/raw/traces-sorted.csv";
-const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
-const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";
+// const OUTPUT_DIR: &str = "/home/ponbac/dev/indago/data/tmp";
+// const TRACES_CSV: &str = "/home/ponbac/dev/indago/data/raw/traces-sorted.csv";
+// const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
+// const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";
 
 enum Dataset {
     Tornado,
@@ -54,6 +54,8 @@ fn main() -> Result<()> {
         OUTPUT_DIR.to_string(),
     );
 
+    data_loader.remove_trace_address_column();
+
     // let poison = Poison {};
     // poison.run(&data_loader, Dataset::Combined, 100_000)?;
     // poison.run(&data_loader, Dataset::KnownAddresses, 100_000)?;
@@ -64,8 +66,8 @@ fn main() -> Result<()> {
     //     data_loader.n_unique_addresses().separate_with_commas()
     // );
 
-    let haircut = Haircut {};
-    haircut.run(&data_loader, Dataset::Tornado, 100_000)?;
+    // let haircut = Haircut {};
+    // haircut.run(&data_loader, Dataset::Tornado, 100_000)?;
 
     Ok(())
 }
