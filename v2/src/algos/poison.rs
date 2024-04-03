@@ -60,6 +60,10 @@ impl BlacklistingAlgorithm for Poison {
                     n_processed,
                     blacklisted_addresses.len(),
                     start_time.elapsed(),
+                    TraceColumn::BlockNumber
+                        .extract_from_parts(&parts)
+                        .parse()
+                        .unwrap(),
                 ));
             }
         }
@@ -69,6 +73,7 @@ impl BlacklistingAlgorithm for Poison {
             n_processed,
             blacklisted_addresses.len(),
             start_time.elapsed(),
+            0,
         ));
 
         // Save the blacklisted addresses to a txt file

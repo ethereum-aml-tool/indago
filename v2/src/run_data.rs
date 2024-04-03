@@ -12,6 +12,7 @@ pub struct RunData {
     rows_processed: usize,
     n_blacklisted: usize,
     processed_after: Duration,
+    current_block: u64,
     ram_usage_gb: f32,
 }
 
@@ -21,6 +22,7 @@ impl RunData {
         rows_processed: usize,
         n_blacklisted: usize,
         processed_after: Duration,
+        current_block: u64,
     ) -> Self {
         system.refresh_memory();
         let ram_usage_gb = system.used_memory() as f32 / 1024.0 / 1024.0 / 1024.0;
@@ -29,6 +31,7 @@ impl RunData {
             rows_processed,
             n_blacklisted,
             processed_after,
+            current_block,
             ram_usage_gb,
         };
         println!("\n{}", rundata);
@@ -55,15 +58,16 @@ pub fn save_run_data(run_data: Vec<RunData>, path: &str) -> Result<()> {
 
     writeln!(
         file,
-        "rows_processed,n_blacklisted,processed_after,ram_usage_gb"
+        "rows_processed,n_blacklisted,processed_after_mins,current_block,ram_usage_gb"
     )?;
     for data in run_data {
         writeln!(
             file,
-            "{},{},{},{}",
+            "{},{},{:.2},{},{:.2}",
             data.rows_processed,
             data.n_blacklisted,
             data.processed_after.as_secs_f32() / 60.0,
+            data.current_block,
             data.ram_usage_gb
         )?;
     }
