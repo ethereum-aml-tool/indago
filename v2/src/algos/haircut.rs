@@ -45,6 +45,10 @@ impl BlacklistingAlgorithm for Haircut {
         for line in data_loader.traces_iter() {
             let line = line?;
             let parts: Vec<&str> = line.split(',').collect();
+            let is_miner_reward = parts.len() < 7;
+            if is_miner_reward {
+                continue;
+            }
 
             let status = TraceColumn::Status.extract_from_parts(&parts);
             let value = TraceColumn::Value.extract_from_parts(&parts);
