@@ -61,6 +61,7 @@ fn main() -> Result<()> {
     poison.run(&data_loader, Dataset::KnownAddresses, 1_000_000)?;
     poison.run(&data_loader, Dataset::Tornado, 1_000_000)?;
 
+    // Number of unique addresses: 283,273,653
     println!(
         "\nNumber of unique addresses: {}",
         data_loader.n_unique_addresses().separate_with_commas()
