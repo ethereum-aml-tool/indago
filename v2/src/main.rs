@@ -58,12 +58,14 @@ fn main() -> Result<()> {
     // data_loader.scientific_notation_to_int();
 
     // let poison = Poison {};
-    // poison.run(&data_loader, Dataset::Combined, 1_000_000)?;
-    // poison.run(&data_loader, Dataset::KnownAddresses, 1_000_000)?;
-    // poison.run(&data_loader, Dataset::Tornado, 1_000_000)?;
+    // poison.run(&data_loader, Dataset::Combined, 10_000_000)?;
+    // poison.run(&data_loader, Dataset::KnownAddresses, 10_000_000)?;
+    // poison.run(&data_loader, Dataset::Tornado, 10_000_000)?;
 
     let haircut = Haircut {};
     haircut.run(&data_loader, Dataset::Combined, 10_000_000)?;
+    // haircut.run(&data_loader, Dataset::KnownAddresses, 10_000_000)?;
+    // haircut.run(&data_loader, Dataset::Tornado, 10_000_000)?;
 
     // Number of unique addresses: 283,273,653
     // println!(
