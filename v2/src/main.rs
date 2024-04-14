@@ -63,7 +63,7 @@ fn main() -> Result<()> {
     // poison.run(&data_loader, Dataset::Tornado, 1_000_000)?;
 
     // let haircut = Haircut {};
-    // haircut.run(&data_loader, Dataset::Combined, 1_000_000)?;
+    // haircut.run(&data_loader, Dataset::Combined, 10_000_000)?;
 
     // Number of unique addresses: 283,273,653
     // println!(
