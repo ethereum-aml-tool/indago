@@ -29,6 +29,43 @@ impl TraceColumn {
     }
 }
 
+pub struct Trace<'a>(&'a [&'a str]);
+
+impl<'a> Trace<'a> {
+    pub fn from_parts(parts: &'a [&'a str]) -> Self {
+        Self(parts)
+    }
+
+    pub fn block_number(&self) -> &str {
+        TraceColumn::BlockNumber.extract_from_parts(self.0)
+    }
+
+    pub fn transaction_index(&self) -> &str {
+        TraceColumn::TransactionIndex.extract_from_parts(self.0)
+    }
+
+    #[allow(clippy::wrong_self_convention)]
+    pub fn from_address(&self) -> &str {
+        TraceColumn::FromAddress.extract_from_parts(self.0)
+    }
+
+    pub fn to_address(&self) -> &str {
+        TraceColumn::ToAddress.extract_from_parts(self.0)
+    }
+
+    pub fn value(&self) -> &str {
+        TraceColumn::Value.extract_from_parts(self.0)
+    }
+
+    pub fn gas_used(&self) -> &str {
+        TraceColumn::GasUsed.extract_from_parts(self.0)
+    }
+
+    pub fn status(&self) -> &str {
+        TraceColumn::Status.extract_from_parts(self.0)
+    }
+}
+
 pub struct DataLoader {
     known_addresses_csv: String,
     tornado_csv: String,

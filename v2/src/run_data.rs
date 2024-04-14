@@ -42,14 +42,19 @@ impl RunData {
 
 impl fmt::Display for RunData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let percentage_complete = self.rows_processed as f32 / 8_035_989_413.0;
+        let estimated_remaining = 1.0 / percentage_complete * self.processed_after.as_secs_f32();
+
         write!(
             f,
-            "Rows processed: {}\nBlacklisted addresses: {}\nProcessed after: {:.2} minutes\nBlock: {}\nRAM usage: {:.2} GB",
+            "Rows processed: {}\nBlacklisted addresses: {}\nProcessed after: {:.2} minutes\nBlock: {}\nRAM usage: {:.2} GB\nProgress: {:.2}%, estimated remaining: {:.2} minutes\n",
             self.rows_processed.separate_with_commas(),
             self.n_blacklisted.separate_with_commas(),
             self.processed_after.as_secs_f32() / 60.0,
             self.current_block,
-            self.ram_usage_gb
+            self.ram_usage_gb,
+            percentage_complete * 100.0,
+            estimated_remaining / 60.0
         )
     }
 }

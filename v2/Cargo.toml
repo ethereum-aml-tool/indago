@@ -10,6 +10,7 @@ anyhow = "1.0.81"
 csv = "1.3.0"
 fxhash = "0.2.1"
 polars = { version = "0.38.1", features = ["lazy", "csv", "dtype-decimal"] }
+rayon = "1.10.0"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 sysinfo = "0.30.7"

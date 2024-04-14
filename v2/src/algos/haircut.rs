@@ -2,19 +2,20 @@ use std::fs;
 use std::io::Write;
 
 use crate::{
-    data_loader::{DataLoader, TraceColumn},
+    data_loader::{DataLoader, Trace},
     run_data::{save_run_data, RunData},
     BlacklistingAlgorithm, Dataset,
 };
 use anyhow::Result;
 use fxhash::FxHashMap as HashMap;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use sysinfo::System;
 
 pub struct Haircut {}
 
 struct Balance {
-    total: u64,
-    tainted: u64,
+    total: u128,
+    tainted: u128,
 }
 
 impl BlacklistingAlgorithm for Haircut {
@@ -31,8 +32,8 @@ impl BlacklistingAlgorithm for Haircut {
             (
                 address.clone(),
                 Balance {
-                    total: u64::max_value() / 2,
-                    tainted: u64::max_value() / 2,
+                    total: u128::max_value() / 2,
+                    tainted: u128::max_value() / 2,
                 },
             )
         }));
@@ -50,42 +51,48 @@ impl BlacklistingAlgorithm for Haircut {
                 continue;
             }
 
-            let status = TraceColumn::Status.extract_from_parts(&parts);
-            let value = TraceColumn::Value.extract_from_parts(&parts);
+            let trace = Trace::from_parts(&parts);
+
+            let status = trace.status();
+            let value = trace.value();
             if (status == "0") || value == "0" {
                 continue;
             }
 
-            let from_address = TraceColumn::FromAddress.extract_from_parts(&parts);
-            let to_address = TraceColumn::ToAddress.extract_from_parts(&parts);
-            let gas_used = TraceColumn::GasUsed
-                .extract_from_parts(&parts)
-                .parse::<u64>()
-                .unwrap_or(0);
-            let value = match value.parse::<u64>() {
-                Ok(value) => value,
-                Err(_) => {
-                    eprintln!("Failed to parse value: {}", value);
-                    continue;
-                }
-            };
+            let from_address = trace.from_address();
+            let to_address = trace.to_address();
 
+            let mut parsed_value: Option<u128> = None;
             let mut tainted_percent = 0.0;
             if let Some(from_balance) = balances.get_mut(from_address) {
                 tainted_percent = from_balance.tainted as f64 / from_balance.total as f64;
-                from_balance.total -= value + gas_used;
-                from_balance.tainted -= (value as f64 * tainted_percent) as u64;
+
+                let gas_used = trace.gas_used().parse::<u128>().unwrap_or(0);
+                parsed_value = value.parse::<u128>().ok();
+                let value = parsed_value.unwrap_or(0);
+                from_balance.total = from_balance.total.saturating_sub(value + gas_used);
+
+                if from_balance.total == 0 {
+                    balances.remove(from_address);
+                } else {
+                    from_balance.tainted = from_balance
+                        .tainted
+                        .saturating_sub((value as f64 * tainted_percent) as u128);
+                }
             }
 
             if let Some(to_balance) = balances.get_mut(to_address) {
-                to_balance.total += value;
-                to_balance.tainted += (value as f64 * tainted_percent) as u64;
+                if let Some(parsed_value) = parsed_value {
+                    to_balance.total += parsed_value;
+                    to_balance.tainted += (parsed_value as f64 * tainted_percent) as u128;
+                }
             } else {
+                let value = parsed_value.unwrap_or(0);
                 balances.insert(
                     to_address.to_string(),
                     Balance {
                         total: value,
-                        tainted: (value as f64 * tainted_percent) as u64,
+                        tainted: (value as f64 * tainted_percent) as u128,
                     },
                 );
             }
@@ -95,12 +102,9 @@ impl BlacklistingAlgorithm for Haircut {
                 run_data.push(RunData::new(
                     &mut system,
                     n_processed,
-                    blacklisted_addresses.len(),
+                    n_tainted_addresses(&balances) - blacklisted_addresses.len(),
                     start_time.elapsed(),
-                    TraceColumn::BlockNumber
-                        .extract_from_parts(&parts)
-                        .parse()
-                        .unwrap(),
+                    trace.block_number().parse().unwrap(),
                 ));
             }
         }
@@ -108,19 +112,21 @@ impl BlacklistingAlgorithm for Haircut {
         run_data.push(RunData::new(
             &mut system,
             n_processed,
-            blacklisted_addresses.len(),
+            n_tainted_addresses(&balances) - blacklisted_addresses.len(),
             start_time.elapsed(),
             0,
         ));
 
-        // Save the blacklisted addresses to a txt file
+        // Save the blacklisted addresses to a .csv
         let mut file = fs::File::create(format!(
-            "{}/haircut-addresses-{}.txt",
+            "{}/haircut-addresses-{}.csv",
             data_loader.output_dir,
             dataset.to_str()
         ))?;
-        for address in blacklisted_addresses.iter() {
-            writeln!(file, "{}", address)?;
+        writeln!(file, "address,total,tainted")?;
+        clean_balances_without_taint(&mut balances);
+        for (address, balance) in balances.iter() {
+            writeln!(file, "{},{},{}", address, balance.total, balance.tainted)?;
         }
         // Save run data to a csv file
         let run_data_path = format!(
@@ -132,4 +138,15 @@ impl BlacklistingAlgorithm for Haircut {
 
         Ok(())
     }
+}
+
+fn n_tainted_addresses(balances: &HashMap<String, Balance>) -> usize {
+    balances
+        .par_iter()
+        .filter(|(_, balance)| balance.tainted > 0)
+        .count()
+}
+
+fn clean_balances_without_taint(balances: &mut HashMap<String, Balance>) {
+    balances.retain(|_, balance| balance.tainted > 0);
 }
