@@ -186,18 +186,22 @@ impl DataLoader {
 
             let line = line.unwrap();
             let mut parts: Vec<String> = line.split(',').map(|s| s.to_string()).collect();
+            let is_miner_reward = parts.len() < 7;
 
-            parts.iter_mut().skip(4).for_each(|part| {
-                if part.contains('e') {
-                    let (mantissa, exponent) = part.split_once('e').unwrap();
-                    let mantissa = mantissa.parse::<f64>().unwrap();
-                    let exponent = exponent.parse::<i32>().unwrap();
-                    let new_value = mantissa * 10_f64.powi(exponent);
-                    *part = new_value.to_string();
-                } else if part.contains('.') {
-                    *part = part.split('.').next().unwrap().to_string();
-                }
-            });
+            parts
+                .iter_mut()
+                .skip(if is_miner_reward { 3 } else { 4 })
+                .for_each(|part| {
+                    if part.contains('e') {
+                        let (mantissa, exponent) = part.split_once('e').unwrap();
+                        let mantissa = mantissa.parse::<f64>().unwrap();
+                        let exponent = exponent.parse::<i32>().unwrap();
+                        let new_value = mantissa * 10_f64.powi(exponent);
+                        *part = new_value.to_string();
+                    } else if part.contains('.') {
+                        *part = part.split('.').next().unwrap().to_string();
+                    }
+                });
 
             lines_to_write.push(parts.join(","));
         }
