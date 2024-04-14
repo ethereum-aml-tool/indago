@@ -55,15 +55,15 @@ fn main() -> Result<()> {
     );
 
     // data_loader.remove_trace_address_column();
-    data_loader.scientific_notation_to_int();
+    // data_loader.scientific_notation_to_int();
 
     // let poison = Poison {};
     // poison.run(&data_loader, Dataset::Combined, 1_000_000)?;
     // poison.run(&data_loader, Dataset::KnownAddresses, 1_000_000)?;
     // poison.run(&data_loader, Dataset::Tornado, 1_000_000)?;
 
-    // let haircut = Haircut {};
-    // haircut.run(&data_loader, Dataset::Combined, 10_000_000)?;
+    let haircut = Haircut {};
+    haircut.run(&data_loader, Dataset::Combined, 10_000_000)?;
 
     // Number of unique addresses: 283,273,653
     // println!(
