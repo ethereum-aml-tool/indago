@@ -174,7 +174,7 @@ impl DataLoader {
         );
 
         for (n_processed, line) in self.traces_iter().skip(1).enumerate() {
-            if lines_to_write.len() % 1_000_000 == 0 {
+            if lines_to_write.len() % 10_000_000 == 0 {
                 writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
                 lines_to_write.clear();
                 println!(
