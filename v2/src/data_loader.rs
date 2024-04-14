@@ -1,9 +1,11 @@
 use fxhash::FxHashSet as HashSet;
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use std::io::Write;
 use std::{
     fs::{self, File},
     io::{BufRead, BufReader, Lines},
 };
+use thousands::Separable;
 
 use crate::Dataset;
 
@@ -161,6 +163,48 @@ impl DataLoader {
         addresses.len()
     }
 
+    pub fn scientific_notation_to_int(&self) {
+        let output_file = format!("{}/traces_no_sciene.csv", self.output_dir);
+        let mut file = File::create(output_file).unwrap();
+
+        let mut lines_to_write = Vec::new();
+        lines_to_write.push(
+            "block_number,transaction_index,from_address,to_address,value,gas_used,status"
+                .to_string(),
+        );
+
+        for (n_processed, line) in self.traces_iter().skip(1).enumerate() {
+            if lines_to_write.len() % 1_000_000 == 0 {
+                writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
+                lines_to_write.clear();
+                println!(
+                    "Processed {} lines, {}%",
+                    n_processed.separate_with_commas(),
+                    (n_processed as f32 / 8_035_989_413.0 * 100.0).round()
+                );
+            }
+
+            let line = line.unwrap();
+            let mut parts: Vec<String> = line.split(',').map(|s| s.to_string()).collect();
+
+            parts.iter_mut().skip(4).for_each(|part| {
+                if part.contains('e') {
+                    let (mantissa, exponent) = part.split_once('e').unwrap();
+                    let mantissa = mantissa.parse::<f64>().unwrap();
+                    let exponent = exponent.parse::<i32>().unwrap();
+                    let new_value = mantissa * 10_f64.powi(exponent);
+                    *part = new_value.to_string();
+                } else if part.contains('.') {
+                    *part = part.split('.').next().unwrap().to_string();
+                }
+            });
+
+            lines_to_write.push(parts.join(","));
+        }
+
+        writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
+    }
+
     // have to handle that trace address can be empty, in quotes and contain commas
     // ,
     // "0,1,2",
@@ -213,4 +257,16 @@ impl DataLoader {
 
     //     writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
     // }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        let test_string = "3.92400000000001";
+
+        let val = test_string.parse::<f64>().unwrap();
+    }
 }
