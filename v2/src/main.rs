@@ -1,7 +1,7 @@
 use algos::{Haircut, Poison};
 use anyhow::Result;
+use clap::{Parser, ValueEnum};
 use data_loader::DataLoader;
-use thousands::Separable;
 
 mod algos;
 mod data_loader;
@@ -25,6 +25,7 @@ const TORNADO_CSV: &str = "/data/blacklist/tornado.csv";
 // const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
 // const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";
 
+#[derive(Debug, Clone, ValueEnum)]
 enum Dataset {
     Tornado,
     KnownAddresses,
@@ -41,40 +42,68 @@ impl Dataset {
     }
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+enum Algorithm {
+    Poison,
+    Haircut,
+    Seniority,
+    Fifo,
+}
+
 trait BlacklistingAlgorithm {
     fn run(&self, data_loader: &DataLoader, dataset: Dataset, n_between_stats: usize)
         -> Result<()>;
 }
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long, value_enum)]
+    algorithm: Algorithm,
+
+    #[arg(short, long, value_enum)]
+    dataset: Dataset,
+
+    #[arg(long, default_value = "10_000_000")]
+    stats_interval: usize,
+
+    #[arg(long)]
+    output_dir: Option<String>,
+
+    #[arg(long)]
+    traces_csv: Option<String>,
+
+    #[arg(long)]
+    known_addresses_csv: Option<String>,
+
+    #[arg(long)]
+    tornado_csv: Option<String>,
+}
+
 fn main() -> Result<()> {
+    let args = Args::parse();
+
     let data_loader = DataLoader::new(
-        KNOWN_ADDRESSES_CSV.to_string(),
-        TORNADO_CSV.to_string(),
-        TRACES_CSV.to_string(),
-        OUTPUT_DIR.to_string(),
+        args.known_addresses_csv
+            .unwrap_or(KNOWN_ADDRESSES_CSV.to_string()),
+        args.tornado_csv.unwrap_or(TORNADO_CSV.to_string()),
+        args.traces_csv.unwrap_or(TRACES_CSV.to_string()),
+        args.output_dir.unwrap_or(OUTPUT_DIR.to_string()),
     );
 
-    // data_loader.remove_trace_address_column();
-    // data_loader.scientific_notation_to_int();
+    let algorithm: Box<dyn BlacklistingAlgorithm> = match args.algorithm {
+        Algorithm::Poison => Box::new(Poison {}),
+        Algorithm::Haircut => Box::new(Haircut {}),
+        _ => panic!("Algorithm not implemented"),
+    };
 
-    // let poison = Poison {};
-    // poison.run(&data_loader, Dataset::Combined, 10_000_000)?;
-    // poison.run(&data_loader, Dataset::KnownAddresses, 10_000_000)?;
-    // poison.run(&data_loader, Dataset::Tornado, 10_000_000)?;
-
-    let haircut = Haircut {};
-    haircut.run(&data_loader, Dataset::Combined, 10_000_000)?;
-    // haircut.run(&data_loader, Dataset::KnownAddresses, 10_000_000)?;
-    // haircut.run(&data_loader, Dataset::Tornado, 10_000_000)?;
+    algorithm.run(&data_loader, args.dataset, args.stats_interval)?;
 
     // Number of unique addresses: 283,273,653
     // println!(
     //     "\nNumber of unique addresses: {}",
     //     data_loader.n_unique_addresses().separate_with_commas()
     // );
-
-    // let haircut = Haircut {};
-    // haircut.run(&data_loader, Dataset::Tornado, 100_000)?;
 
     Ok(())
 }

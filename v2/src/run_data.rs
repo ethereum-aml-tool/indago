@@ -42,7 +42,7 @@ impl RunData {
 
 impl fmt::Display for RunData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let percentage_complete = self.rows_processed as f32 / 8_035_989_413.0;
+        let percentage_complete = self.rows_processed as f32 / 1_754_936_568.0;
         let estimated_remaining = 1.0 / percentage_complete * self.processed_after.as_secs_f32();
 
         write!(

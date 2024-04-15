@@ -1,5 +1,4 @@
 use fxhash::FxHashSet as HashSet;
-use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use std::io::Write;
 use std::{
     fs::{self, File},
@@ -261,16 +260,4 @@ impl DataLoader {
 
     //     writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
     // }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse() {
-        let test_string = "3.92400000000001";
-
-        let val = test_string.parse::<f64>().unwrap();
-    }
 }
