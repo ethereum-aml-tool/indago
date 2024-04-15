@@ -1,4 +1,4 @@
-use algos::{Haircut, Poison};
+use algos::{Haircut, Poison, Seniority};
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
 use data_loader::DataLoader;
@@ -76,6 +76,7 @@ fn main() -> Result<()> {
     let algorithm: Box<dyn BlacklistingAlgorithm> = match args.algorithm {
         Algorithm::Poison => Box::new(Poison {}),
         Algorithm::Haircut => Box::new(Haircut {}),
+        Algorithm::Seniority => Box::new(Seniority {}),
         _ => panic!("Algorithm not implemented"),
     };
 
@@ -90,12 +91,12 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-const OUTPUT_DIR: &str = "/data/blacklist";
-const TRACES_CSV: &str = "/data/blacklist/traces-sorted.csv";
-const KNOWN_ADDRESSES_CSV: &str = "/data/blacklist/known-addresses.csv";
-const TORNADO_CSV: &str = "/data/blacklist/tornado.csv";
+// const OUTPUT_DIR: &str = "/data/blacklist";
+// const TRACES_CSV: &str = "/data/blacklist/traces-sorted.csv";
+// const KNOWN_ADDRESSES_CSV: &str = "/data/blacklist/known-addresses.csv";
+// const TORNADO_CSV: &str = "/data/blacklist/tornado.csv";
 
-// const OUTPUT_DIR: &str = "/home/ponbac/dev/indago/data/tmp";
-// const TRACES_CSV: &str = "/home/ponbac/dev/indago/data/raw/traces-sorted-scientific.csv";
-// const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
-// const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";
+const OUTPUT_DIR: &str = "/home/ponbac/dev/indago/data/tmp";
+const TRACES_CSV: &str = "/home/ponbac/dev/indago/data/raw/traces-sorted.csv";
+const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
+const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";
