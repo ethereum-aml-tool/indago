@@ -91,12 +91,12 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-const OUTPUT_DIR: &str = "/data/blacklist";
-const TRACES_CSV: &str = "/data/blacklist/traces-sorted.csv";
-const KNOWN_ADDRESSES_CSV: &str = "/data/blacklist/known-addresses.csv";
-const TORNADO_CSV: &str = "/data/blacklist/tornado.csv";
+// const OUTPUT_DIR: &str = "/data/blacklist";
+// const TRACES_CSV: &str = "/data/blacklist/traces-sorted.csv";
+// const KNOWN_ADDRESSES_CSV: &str = "/data/blacklist/known-addresses.csv";
+// const TORNADO_CSV: &str = "/data/blacklist/tornado.csv";
 
-// const OUTPUT_DIR: &str = "/home/ponbac/dev/indago/data/tmp";
-// const TRACES_CSV: &str = "/home/ponbac/dev/indago/data/raw/traces-sorted.csv";
-// const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
-// const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";
+const OUTPUT_DIR: &str = "/home/ponbac/dev/indago/data/tmp";
+const TRACES_CSV: &str = "/home/ponbac/dev/indago/data/raw/traces-sorted.csv";
+const KNOWN_ADDRESSES_CSV: &str = "/home/ponbac/dev/indago/data/known-addresses.csv";
+const TORNADO_CSV: &str = "/home/ponbac/dev/indago/data/tornado.csv";

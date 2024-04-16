@@ -46,16 +46,21 @@ impl BlacklistingAlgorithm for Haircut {
         for line in data_loader.traces_iter() {
             let line = line?;
             let parts: Vec<&str> = line.split(',').collect();
-            let is_miner_reward = parts.len() < 7;
-            if is_miner_reward {
+            let trace = Trace::from_parts(&parts);
+            if !trace.is_valid() {
                 continue;
             }
 
-            let trace = Trace::from_parts(&parts);
-
-            let status = trace.status();
-            let value = trace.value();
-            if (status == "0") || value == "0" {
+            if trace.is_miner_reward() {
+                balances
+                    .entry(trace.miner_address().to_string())
+                    .and_modify(|balance| {
+                        balance.total += trace.miner_reward().parse::<u128>().unwrap_or(0);
+                    })
+                    .or_insert_with(|| Balance {
+                        total: trace.miner_reward().parse::<u128>().unwrap_or(0),
+                        tainted: 0,
+                    });
                 continue;
             }
 
@@ -68,7 +73,7 @@ impl BlacklistingAlgorithm for Haircut {
                 tainted_percent = from_balance.tainted as f64 / from_balance.total as f64;
 
                 let gas_used = trace.gas_used().parse::<u128>().unwrap_or(0);
-                parsed_value = value.parse::<u128>().ok();
+                parsed_value = trace.value().parse::<u128>().ok();
                 let value = parsed_value.unwrap_or(0);
                 from_balance.total = from_balance.total.saturating_sub(value + gas_used);
 

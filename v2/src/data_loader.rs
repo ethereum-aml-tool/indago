@@ -37,6 +37,14 @@ impl<'a> Trace<'a> {
         Self(parts)
     }
 
+    pub fn is_valid(&self) -> bool {
+        match self.0.len() {
+            6 => true,
+            7 => self.status() != "0" && self.value() != "0",
+            _ => false,
+        }
+    }
+
     pub fn block_number(&self) -> &str {
         TraceColumn::BlockNumber.extract_from_parts(self.0)
     }
@@ -64,6 +72,18 @@ impl<'a> Trace<'a> {
 
     pub fn status(&self) -> &str {
         TraceColumn::Status.extract_from_parts(self.0)
+    }
+
+    pub fn is_miner_reward(&self) -> bool {
+        self.0.len() == 6
+    }
+
+    pub fn miner_address(&self) -> &str {
+        self.0[2]
+    }
+
+    pub fn miner_reward(&self) -> &str {
+        self.0[3]
     }
 }
 
