@@ -1,22 +1,18 @@
 use std::io::Write;
 use std::{cmp, fs};
 
+use crate::run_data::{save_run_data_ext, RunDataExt};
 use crate::{
     data_loader::{DataLoader, Trace},
-    run_data::{save_run_data, RunData},
     BlacklistingAlgorithm, Dataset,
 };
 use anyhow::Result;
 use fxhash::FxHashMap as HashMap;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use sysinfo::System;
 
-pub struct Seniority {}
+use super::Balance;
 
-struct Balance {
-    total: u128,
-    tainted: u128,
-}
+pub struct Seniority {}
 
 impl BlacklistingAlgorithm for Seniority {
     fn run(
@@ -38,7 +34,7 @@ impl BlacklistingAlgorithm for Seniority {
             )
         }));
 
-        let mut run_data: Vec<RunData> = Vec::new();
+        let mut run_data: Vec<RunDataExt> = Vec::new();
         let mut system = System::new();
         let start_time = std::time::Instant::now();
         let mut n_processed = 0;
@@ -101,20 +97,20 @@ impl BlacklistingAlgorithm for Seniority {
 
             n_processed += 1;
             if n_processed % n_between_stats == 0 {
-                run_data.push(RunData::new(
+                run_data.push(RunDataExt::new(
                     &mut system,
                     n_processed,
-                    n_tainted_addresses(&balances) - blacklisted_addresses.len(),
+                    &balances,
                     start_time.elapsed(),
                     trace.block_number().parse().unwrap(),
                 ));
             }
         }
         // final run data
-        run_data.push(RunData::new(
+        run_data.push(RunDataExt::new(
             &mut system,
             n_processed,
-            n_tainted_addresses(&balances) - blacklisted_addresses.len(),
+            &balances,
             start_time.elapsed(),
             0,
         ));
@@ -125,28 +121,27 @@ impl BlacklistingAlgorithm for Seniority {
             data_loader.output_dir,
             dataset.to_str()
         ))?;
-        writeln!(file, "address,total,tainted")?;
+        let mut lines_to_write = Vec::new();
+        lines_to_write.push("address,total,tainted".to_string());
         clean_balances_without_taint(&mut balances);
         for (address, balance) in balances.iter() {
-            writeln!(file, "{},{},{}", address, balance.total, balance.tainted)?;
+            lines_to_write.push(format!("{},{},{}", address, balance.total, balance.tainted));
+            if lines_to_write.len() % 1_000_000 == 0 {
+                writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
+                lines_to_write.clear();
+            }
         }
+        writeln!(file, "{}", lines_to_write.join("\n")).unwrap();
         // Save run data to a csv file
         let run_data_path = format!(
             "{}/seniority-rundata-{}.csv",
             data_loader.output_dir,
             dataset.to_str()
         );
-        save_run_data(run_data, run_data_path.as_str())?;
+        save_run_data_ext(run_data, run_data_path.as_str())?;
 
         Ok(())
     }
-}
-
-fn n_tainted_addresses(balances: &HashMap<String, Balance>) -> usize {
-    balances
-        .par_iter()
-        .filter(|(_, balance)| balance.tainted > 0)
-        .count()
 }
 
 fn clean_balances_without_taint(balances: &mut HashMap<String, Balance>) {
