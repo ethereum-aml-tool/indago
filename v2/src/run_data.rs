@@ -77,21 +77,19 @@ impl RunDataExt {
         for balance in balances.values() {
             if balance.tainted > 0 {
                 n_blacklisted += 1;
-            }
-            if balance.tainted < 10000000000000000 {
-                n_blacklisted_0_01 += 1;
-            }
-            if balance.tainted < 100000000000000000 {
-                n_blacklisted_0_1 += 1;
-            }
-            if balance.tainted < 1000000000000000000 {
-                n_blacklisted_1 += 1;
-            }
-            if balance.tainted < 10000000000000000000 {
-                n_blacklisted_10 += 1;
-            }
-            if balance.tainted < 100000000000000000000 {
-                n_blacklisted_100 += 1;
+
+                // 0.01, 0.1, 1, 10, and 100 ETH
+                if balance.tainted <= 10000000000000000 {
+                    n_blacklisted_0_01 += 1;
+                } else if balance.tainted <= 100000000000000000 {
+                    n_blacklisted_0_1 += 1;
+                } else if balance.tainted <= 1000000000000000000 {
+                    n_blacklisted_1 += 1;
+                } else if balance.tainted <= 10000000000000000000 {
+                    n_blacklisted_10 += 1;
+                } else if balance.tainted <= 100000000000000000000 {
+                    n_blacklisted_100 += 1;
+                }
             }
         }
 
