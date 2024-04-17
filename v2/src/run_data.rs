@@ -79,15 +79,15 @@ impl RunDataExt {
                 n_blacklisted += 1;
 
                 // 0.01, 0.1, 1, 10, and 100 ETH
-                if balance.tainted <= 10000000000000000 {
+                if balance.tainted <= eth_to_wei(0.01) {
                     n_blacklisted_0_01 += 1;
-                } else if balance.tainted <= 100000000000000000 {
+                } else if balance.tainted <= eth_to_wei(0.1) {
                     n_blacklisted_0_1 += 1;
-                } else if balance.tainted <= 1000000000000000000 {
+                } else if balance.tainted <= eth_to_wei(1.0) {
                     n_blacklisted_1 += 1;
-                } else if balance.tainted <= 10000000000000000000 {
+                } else if balance.tainted <= eth_to_wei(10.0) {
                     n_blacklisted_10 += 1;
-                } else if balance.tainted <= 100000000000000000000 {
+                } else if balance.tainted <= eth_to_wei(100.0) {
                     n_blacklisted_100 += 1;
                 }
             }
@@ -196,4 +196,36 @@ pub fn save_run_data_ext(run_data: Vec<RunDataExt>, path: &str) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn eth_to_wei(eth: f64) -> u128 {
+    (eth * 1_000_000_000_000_000_000.0) as u128
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_eth_to_wei() {
+        assert_eq!(eth_to_wei(1.0), 1_000_000_000_000_000_000);
+        assert_eq!(eth_to_wei(0.1), 100_000_000_000_000_000);
+        assert_eq!(eth_to_wei(0.01), 10_000_000_000_000_000);
+        assert_eq!(eth_to_wei(0.001), 1_000_000_000_000_000);
+        assert_eq!(eth_to_wei(0.0001), 100_000_000_000_000);
+        assert_eq!(eth_to_wei(0.00001), 10_000_000_000_000);
+        assert_eq!(eth_to_wei(0.000001), 1_000_000_000_000);
+        assert_eq!(eth_to_wei(0.0000001), 100_000_000_000);
+        assert_eq!(eth_to_wei(0.00000001), 10_000_000_000);
+        assert_eq!(eth_to_wei(0.000000001), 1_000_000_000);
+        assert_eq!(eth_to_wei(0.0000000001), 100_000_000);
+        assert_eq!(eth_to_wei(0.00000000001), 10_000_000);
+        assert_eq!(eth_to_wei(0.000000000001), 1_000_000);
+        assert_eq!(eth_to_wei(0.0000000000001), 100_000);
+        assert_eq!(eth_to_wei(0.00000000000001), 10_000);
+        assert_eq!(eth_to_wei(0.000000000000001), 1_000);
+        assert_eq!(eth_to_wei(0.0000000000000001), 100);
+        assert_eq!(eth_to_wei(0.00000000000000001), 10);
+        assert_eq!(eth_to_wei(0.000000000000000001), 1);
+    }
 }
